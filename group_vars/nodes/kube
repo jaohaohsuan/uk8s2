@@ -1,4 +1,0 @@
-kube:
-  api-servers: "https://192.168.80.117:443"
-  cluster-dns: "10.254.0.1"
-  cluster-domain: "cluster.local"

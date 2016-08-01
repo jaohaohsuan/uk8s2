@@ -1,5 +1,5 @@
 ---
-- hosts: nodes
+- name: Become kubernete node
   vars_prompt:
     - name: kubernetes_version
       prompt: kubernetes version
@@ -13,13 +13,19 @@
       prompt: pki reletive directory
       default: master117
       private: no
+    - name: nodes
+      prompt: hosts
+      default: nodes
+      private: no
+  vars_files:
+    - vars_files/kube.yml
   vars:
     downloads_dir: "{{ playbook_dir }}/downloads"
-    etcd_endpoints: "{% for node in groups['etcd'] %}http://{{hostvars[node].ansible_host}}:2379{% if not loop.last %},{% endif %}{% endfor %}"
   roles:
-    - { role: docker, docker_version: '1.11.2-0~xenial', become: yes }
-    - { role: flannel, flannel_version: '0.5.5', become: yes }
+    - { role: docker, docker_version: '1.11.2-0~xenial', become: yes, tags: ['init'] }
+    - { role: flannel, flannel_version: '0.5.5', become: yes, tags: ['init'] }
     - { role: node, become: yes }
+  hosts: "{{ nodes }}"
   tasks:
     - local_action: stat
       args:
@@ -59,4 +65,5 @@
         state=present
         update_cache=yes
         cache_valid_time=86400
+      become: yes
 

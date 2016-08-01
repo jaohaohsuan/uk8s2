@@ -1,4 +1,4 @@
 kube:
-  api-servers: "https://192.168.80.117:443"
+  service-cluster-ip-range: "10.254.0.0/16"
   cluster-dns: "10.254.0.1"
   cluster-domain: "cluster.local"

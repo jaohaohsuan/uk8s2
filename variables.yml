@@ -1,13 +1,23 @@
 ---
 - name: variables exmaples
-  hosts: nodes
+  hosts: localhost
+  vars:
+    ifac: enp0s3
   tasks:
-    - setup: filter=ansible_all_ipv4_addresses
-      name: gather facts
-      register: r
-      delegate_to: "{{ groups['etcd'][0] }}"
-      run_once: yes
-    - debug: var=r
+    - setup: filter=ansible_default_ipv4
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['etcd'] }}"
+      register: etcds
+
+    # - setup: filter=ansible_all_ipv4_addresses
+    #   name: gather facts
+    #   register: r
+    #   delegate_to: "{{ groups['etcd'][0] }}"
+    #   run_once: yes
+    # - debug: var=etcds
+
+    - debug: msg=http://"{{ item.ansible_facts.ansible_default_ipv4.address }}":3900
+      with_items: "{{ etcds.results }}"
     #- debug: var=hostvars
     #- debug: var=inventory_hostname
     #- debug: var=hostvars[inventory_hostname]
@@ -16,10 +26,10 @@
     #    - debug: var=groups['etcd']
     # - debug: var=inventory_hostname
     # - debug: var=hostvars
-    - debug: var=groups['etcd'][0]
+    #- debug: var=groups['etcd'][0]
     # - shell: uname -a
     #   delegate_to: imac
     #   register: r
     # - debug: var=r
-    # - debug: var=ansible_default_ipv4
+    - debug: msg={{ hostvars[inventory_hostname]['ansible_' + ifac].ipv4.address }}
 

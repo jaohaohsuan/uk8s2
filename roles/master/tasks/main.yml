@@ -12,6 +12,14 @@
     - kube-controller-manager
     - kube-scheduler
 
+- setup: filter="{{ 'ansible_' + etcd_ifac }}"
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups[flannel_etcd_group_name] }}"
+  register: etcds
+
+- set_fact:
+    master_etcd_endpoints: "{% for node in etcds.results %}http://{{ node.ansible_facts['ansible_' + etcd_ifac].ipv4.address }}:2379{% if not loop.last %},{% endif %}{% endfor %}"
+
 - template: >
     src="{{ item }}.j2"
     dest="/etc/default/{{ item }}"

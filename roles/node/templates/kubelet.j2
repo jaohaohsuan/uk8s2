@@ -1,4 +1,4 @@
-KUBELET_OPTS="--api-servers={{ kube['api-servers'] }} \
+KUBELET_OPTS="--api-servers={{ kube_api_servers }} \
   --cluster-domain={{ kube['cluster-domain'] }} \
   --allow-privileged=true \
   --cluster-dns={{ kube['cluster-dns'] }} \

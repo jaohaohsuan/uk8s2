@@ -1,5 +1,5 @@
 localhost ansible_connection=local
-master1 ansible_host=10.85.1.99 
+master1 ansible_host=10.85.1.99 flannel_ifac=enp2s0f0 etcd_ifac=enp2s0f0 ansible_python_interpreter=/usr/bin/python2.7
 
 [etcd]
 master1
@@ -7,9 +7,8 @@ master1
 [nodes]
 master1
 
-[k8s:children]
-etcd
-nodes
+[nodes:vars]
+flannel_etcd_group_name=etcd
 
-[yunlin:children]
-k8s
+[yunlin]
+master1

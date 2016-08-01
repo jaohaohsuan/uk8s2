@@ -1,6 +1,6 @@
-KUBE_APISERVER_OPTS="--etcd-servers={{ etcd_endpoints }} \
+KUBE_APISERVER_OPTS="--etcd-servers={{ master_etcd_endpoints }} \
   --allow-privileged=true \
-  --service-cluster-ip-range={{ service_cluster_ip_range }} \
+  --service-cluster-ip-range={{ kube['service-cluster-ip-range'] }} \
   --tls-cert-file=/etc/kubernetes/ssl/{{ ansible_hostname }}.crt \
   --tls-private-key-file=/etc/kubernetes/ssl/{{ ansible_hostname }}.key \
   --client-ca-file=/etc/kubernetes/ssl/ca.crt \
