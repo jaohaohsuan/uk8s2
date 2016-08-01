@@ -1,0 +1,41 @@
+---
+- file: >
+    path=/etc/kubernetes/manifests
+    state=directory
+
+- file: >
+    path=/etc/kubernetes/ssl
+    state=directory
+
+- template: >
+    src=kubeconfig.j2
+    dest=/var/lib/kubelet/kubeconfig
+    
+- copy: >
+    src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/{{ item }}"
+    dest="/usr/local/bin/{{ item }}"
+    mode=0744
+  with_items:
+    - kubelet
+    - kube-proxy
+  notify:
+    - reload systemd
+    - restart kubelet
+
+- copy: src="{{ item }}.service" dest="/lib/systemd/system/{{ item }}.service"
+  with_items:
+    - kubelet
+  notify:
+    - reload systemd
+    - restart kubelet
+
+- template: src="{{ item }}.j2" dest="/etc/default/{{ item }}"
+  with_items:
+    - kubelet
+  notify:
+    - reload systemd
+    - restart kubelet
+
+- service: name={{ item }} state=started enabled=yes
+  with_items:
+    - kubelet

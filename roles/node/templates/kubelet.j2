@@ -1,0 +1,5 @@
+KUBELET_OPTS="--api-servers={{ kube['api-servers'] }} \
+  --cluster-domain={{ kube['cluster-domain'] }} \
+  --allow-privileged=true \
+  --cluster-dns={{ kube['cluster-dns'] }} \
+  --config=/etc/kubernetes/manifests"

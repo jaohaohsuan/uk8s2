@@ -1,0 +1,1 @@
+FLANNEL_OPTS="--etcd-endpoints={{ etcd_endpoints }} --ip-masq=true --iface={{ hostvars[inventory_hostname]['ansible_' + flannel_ifac].ipv4.address }} --etcd-prefix=/{{ kube['cluster-domain'] }}/network"

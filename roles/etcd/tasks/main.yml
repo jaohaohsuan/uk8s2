@@ -1,0 +1,18 @@
+- apt: >
+    name=etcd={{ etcd_version }}
+    update_cache=yes
+    cache_valid_time=86400
+    state=present 
+  name: install etcd version {{ etcd_version }}
+  become: yes
+
+- name: set the /etc/default/etcd file
+  template: >
+    src=etcd.j2
+    dest=/etc/default/etcd
+    backup=yes
+  become: yes
+  notify:
+    - reload systemd
+    - restart etcd
+    - config flannel

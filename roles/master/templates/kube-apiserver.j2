@@ -1,0 +1,11 @@
+KUBE_APISERVER_OPTS="--etcd-servers={{ etcd_endpoints }} \
+  --allow-privileged=true \
+  --service-cluster-ip-range={{ service_cluster_ip_range }} \
+  --tls-cert-file=/etc/kubernetes/ssl/{{ ansible_hostname }}.crt \
+  --tls-private-key-file=/etc/kubernetes/ssl/{{ ansible_hostname }}.key \
+  --client-ca-file=/etc/kubernetes/ssl/ca.crt \
+  --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
+  --bind-address=0.0.0.0 --secure-port=443"
+
+# --token-auth-file=/srv/kubernetes/known_tokens.csv \
+# --basic-auth-file=/srv/kubernetes/known_basic_auth.csv \

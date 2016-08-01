@@ -1,0 +1,3 @@
+KUBE_CONTROLLER_MANAGER_OPTS="--service-account-private-key-file=/etc/kubernetes/ssl/{{ ansible_hostname }}.key \
+  --root-ca-file=/etc/kubernetes/ssl/ca.crt \
+  --master=127.0.0.1:8080"

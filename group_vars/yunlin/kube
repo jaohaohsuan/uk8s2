@@ -1,0 +1,14 @@
+---
+
+etcd_endpoints: "{% for node in groups['etcd'] %}http://{{hostvars[node].ansible_host}}:2379{% if not loop.last %},{% endif %}{% endfor %}"
+
+dns_domain: cluster.local
+
+easyrsa3_dir: downloads/easy-rsa-master/easyrsa3
+
+# A CIDR notation IP range from which to assign service cluster IPs.
+# This must not overlap with any IP ranges assigned to nodes for pods.
+service_cluster_ip_range: "10.254.0.0/16"
+
+#service_ip: "{{ service_cluster_ip_range|ipaddr('net')|ipaddr(1)|ipaddr('address') }}"
+service_ip: "10.254.0.1"

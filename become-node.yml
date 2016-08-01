@@ -1,0 +1,62 @@
+---
+- hosts: nodes
+  vars_prompt:
+    - name: kubernetes_version
+      prompt: kubernetes version
+      default: "v1.3.3"
+      private: no
+    - name: kubernetes_checksum
+      prompt: "tar.gz checksum"
+      default: "sha256:a92a74a0d3f7d02d01ac2c8dfb5ee2e97b0485819e77b2110eb7c6b7c782478c"
+      private: no
+    - name: pki_dir
+      prompt: pki reletive directory
+      default: master117
+      private: no
+  vars:
+    downloads_dir: "{{ playbook_dir }}/downloads"
+    etcd_endpoints: "{% for node in groups['etcd'] %}http://{{hostvars[node].ansible_host}}:2379{% if not loop.last %},{% endif %}{% endfor %}"
+  roles:
+    - { role: docker, docker_version: '1.11.2-0~xenial', become: yes }
+    - { role: flannel, flannel_version: '0.5.5', become: yes }
+    - { role: node, become: yes }
+  tasks:
+    - local_action: stat
+      args:
+        path: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
+      register: ca
+      run_once: true
+
+    - local_action: "shell ./easyrsa build-client-full node-{{ ansible_hostname }} nopass"
+      args:
+        chdir: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+        creates: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
+      environment:
+        EASYRSA_PKI: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}"
+        EASYRSA: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+      when: ca.stat.exists
+      name: generate client certificate authentication
+
+    - copy: >
+        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
+        dest=/etc/kubernetes/ssl/ca.crt
+      become: yes
+
+    - copy: >
+        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/node-{{ ansible_hostname }}.crt"
+        dest=/etc/kubernetes/ssl/kubecfg.crt
+      become: yes
+
+    - copy: >
+        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
+        dest=/etc/kubernetes/ssl/kubecfg.key
+        mode=0600
+      become: yes
+
+    - name: install glusterfs-client
+      apt: >
+        name=glusterfs-client={{ glusterfs_version }} 
+        state=present
+        update_cache=yes
+        cache_valid_time=86400
+

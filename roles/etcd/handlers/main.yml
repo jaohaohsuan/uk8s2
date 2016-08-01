@@ -1,0 +1,20 @@
+---
+- name: reload systemd
+  command: systemctl daemon-reload
+  become: yes
+
+- name: restart etcd
+  service: >
+    name=etcd
+    state=restarted
+  become: yes
+
+- name: config flannel
+  include: "config-flannel.yml"
+  become: yes
+# works on ansible 2.2
+#  systemd: >
+#    name=etcd
+#    state=restarted
+#    daemon_reload=yes
+#  become: yes

@@ -1,0 +1,63 @@
+- local_action:
+    get_url
+      url="https://github.com/coreos/flannel/releases/download/v{{ flannel_version }}/flannel-{{ flannel_version }}-linux-amd64.tar.gz"
+      dest="{{ downloads_dir }}/flannel-{{ flannel_version }}-linux-amd64.tar.gz"
+  run_once: yes
+  name: download flannel from github release tag {{ flannel_version }}
+  become: no
+
+- unarchive: >
+    src="{{ downloads_dir }}/flannel-{{ flannel_version }}-linux-amd64.tar.gz"
+    dest="/opt"
+    copy=true
+  name: "extract flannel-{{ flannel_version }}-linux-amd64.tar.gz"
+  notify:
+    - reload systemd
+    - restart flannel
+
+- file: >
+    path=/usr/local/bin/flanneld
+    src=/opt/flannel-{{ flannel_version }}/flanneld
+    state=link
+
+- template: >
+    src=flannel.service.j2
+    dest=/lib/systemd/system/flannel.service
+  notify:
+    - reload systemd
+    - restart flannel
+
+- template: >
+    src=flannel.j2
+    dest=/etc/default/flannel
+  notify:
+    - reload systemd
+    - restart flannel
+
+- include: "docker.yml"
+  name: config docker
+
+- service: name=flannel enabled=yes state=started
+
+- shell: |
+    docker run --rm busybox netstat -r | grep `ip a | grep flannel\.[0-9]$ | awk '{print $2}' | sed 's/\/.*//'`
+  changed_when: docker0_result.rc != 0
+  register: docker0_result
+  name: ip a
+
+#- debug: var=docker0_result
+
+- shell: |
+    ip link set docker0 down 2>&1 || true
+    brctl delbr docker0 down 2>&1 || true
+  name: clean up docker0
+  when: docker0_result.rc != 0
+  become: yes
+  notify:
+    - reload systemd
+    - restart docker
+
+
+#- name: Move foo to bar
+#  command: creates="/usr/local/bin/flanneld" mv /tmp/flannel-{{ flannel_version }}/flanneld /usr/local/bin/flanneld
+#  become: yes

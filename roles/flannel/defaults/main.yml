@@ -1,0 +1,4 @@
+---
+flannel_network: "172.16.0.0/16"
+flannel_backends: "vxlan" #host-gw
+flannel_ifac: ""

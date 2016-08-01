@@ -1,0 +1,15 @@
+[Unit]
+Description=Flanneld overlay address etcd agent
+Before=docker.service
+After=network.target
+After=etcd.service
+
+[Service]
+Type=notify
+EnvironmentFile=-/etc/default/%p
+ExecStart=/usr/local/bin/flanneld $FLANNEL_OPTS
+ExecStartPost=/opt/flannel-{{ flannel_version }}/mk-docker-opts.sh
+Restart=on-failure
+
+[Install]
+RequiredBy=docker.service

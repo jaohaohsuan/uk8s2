@@ -1,0 +1,60 @@
+---
+- name: create ssh connection
+  hosts: localhost
+  connection: local
+  vars_files:
+    - vars_files/secrets.yml
+  vars_prompt:
+    - name: hostname
+      prompt: hostname
+      default: 192.168.80.117
+      private: no
+    - name: ssh_port
+      prompt: ssh port
+      default: 22
+      private: no
+    - name: user
+      default: inu
+      private: no
+    - name: identify_file
+      prompt: ssh public key location
+      default: "~/.ssh/id_rsa.pub"
+      private: no
+  tasks:
+    - command: |
+        sshpass -p {{ inu_pass }}
+        ssh-copy-id
+          -p {{ ssh_port }}
+          -i {{ identify_file }}
+          -o StrictHostKeyChecking=no {{ user }}@{{ hostname }}
+
+- name: install ansible needs
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: install python 2.7
+      raw: sudo apt update && sudo apt install -y python2.7
+  post_tasks:
+    - raw: python -V
+    - raw: sudo apt upgrade
+
+- name: install ansible needs
+  hosts: all
+  gather_facts: true
+  pre_tasks:
+  tasks:
+    - name: "install {{ item }}"
+      apt: >
+        name={{ item }}
+        update_cache=yes
+        cache_valid_time=86400
+        state=present 
+      with_items:
+        - python-httplib2
+        - bridge-utils
+        - pptp-linux
+        - iftop
+        - htop
+        - fish
+      become: yes
+  post_tasks:

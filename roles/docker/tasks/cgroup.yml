@@ -1,0 +1,11 @@
+---
+- lineinfile: >
+    dest=/etc/default/grub 
+    line="GRUB_CMDLINE_LINUX=\"cgroup_enable=memory swapaccount=1\"" 
+    regexp="cgroup_enable"
+    state=present 
+  notify:
+    - update grub
+    - reboot machine
+    - wait server back
+  name: add support memory limit

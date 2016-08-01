@@ -1,0 +1,8 @@
+
+- name: install glusterfs-server
+  apt: name=glusterfs-server={{ version }}
+
+- service: name=glusterfs-server state=started enabled=yes
+  
+- name: install glusterfs-client
+  apt: name=glusterfs-client={{ version }}

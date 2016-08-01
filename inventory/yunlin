@@ -1,0 +1,15 @@
+localhost ansible_connection=local
+master1 ansible_host=10.85.1.99 
+
+[etcd]
+master1
+
+[nodes]
+master1
+
+[k8s:children]
+etcd
+nodes
+
+[yunlin:children]
+k8s

@@ -1,0 +1,77 @@
+---
+- name: gen cert & tokens
+  vars_prompt:
+    - name: kube_apiserver_host
+      prompt: kubernetes api server
+      default: master117
+      private: no
+    - name: ca_cn
+      prompt: CA Root CN
+      private: no
+      default: cluster.local
+    - name: pki_dir
+      prompt: pki reletive directory
+      default: master117
+      private: no
+  hosts: "{{ kube_apiserver_host }}"
+  vars:
+    downloads_dir: "{{ playbook_dir }}/downloads"
+    easyrsa_opts:
+      - args: init-pki
+        output: ca
+      - args: "--batch --req-cn={{ ca_cn }} build-ca nopass" 
+        output: ca
+      - args: "--subject-alt-name=\"{{ kube_apiserver.san }}\" build-server-full \"{{ ansible_hostname }}\" nopass"
+        output: "{{ ansible_hostname }}"
+  #      - args: "build-client-full kubelet nopass"
+  #        output: kubelet
+      # - args: "build-client-full kubecfg nopass"
+      #   output: kubecfg
+  tasks:
+    - local_action: file
+      args:
+        path: "{{ downloads_dir }}/easy-rsa"
+        state: directory
+
+    - local_action: get_url
+      args:
+        url: "https://storage.googleapis.com/kubernetes-release/easy-rsa/easy-rsa.tar.gz"
+        dest: "{{ downloads_dir }}/easy-rsa.tar.gz"
+
+    - local_action: unarchive
+      args:
+        src: "{{ downloads_dir }}/easy-rsa.tar.gz"
+        dest: "{{ downloads_dir }}/easy-rsa/"
+        creates: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3/easyrsa"
+        copy: no
+
+    - local_action: "shell ./easyrsa {{ item.args }}"
+      args:
+        chdir: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+        creates: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/{{ item.output }}.key"
+      environment:
+        EASYRSA_PKI: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}"
+        EASYRSA: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+      with_items: "{{ easyrsa_opts }}"
+
+    - file: >
+        path=/etc/kubernetes/ssl
+        state=directory
+      become: yes
+    
+    - copy: >
+        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
+        dest=/etc/kubernetes/ssl/ca.crt
+      become: yes
+
+    - copy: >
+        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/{{ ansible_hostname }}.key"
+        dest="/etc/kubernetes/ssl/{{ ansible_hostname }}.key"
+        mode=0600
+      become: yes
+
+    - copy: >
+        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/{{ ansible_hostname }}.crt"
+        dest="/etc/kubernetes/ssl/{{ ansible_hostname }}.crt"
+      become: yes
+

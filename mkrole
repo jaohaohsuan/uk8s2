@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+
+mkdir -p roles/$1/{tasks,files,templates,handlers,vars,defaults,meta}
+touch roles/$1/{tasks,handlers,vars,defaults,meta}/main.yml

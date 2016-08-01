@@ -1,0 +1,10 @@
+---
+- command: "etcdctl get /{{ kube['cluster-domain'] }}/network/config"
+  register: result
+  changed_when: result.rc != 0
+  ignore_errors: true
+  name: "get /{{ kube['cluster-domain'] }}/network/config"
+
+- name: "etcdctl set {{ flannel_config }}"
+  command: "etcdctl set /{{ kube['cluster-domain'] }}/network/config {{ flannel_config }}"
+  when: '{{ config }} not in result.stdout|default("")'
