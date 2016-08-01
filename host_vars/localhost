@@ -1,2 +1,4 @@
 ---
 downloads_dir: "{{ playbook_dir }}/downloads"
+node:
+  labels: "env=dev"

@@ -21,7 +21,7 @@
         output: ca
       - args: "--batch --req-cn={{ ca_cn }} build-ca nopass" 
         output: ca
-      - args: "--subject-alt-name=\"{{ kube_apiserver.san }}\" build-server-full \"{{ ansible_hostname }}\" nopass"
+      - args: "--subject-alt-name=\"IP:{{ ansible_host }},IP:10.254.0.1,IP:192.168.1.150,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.cluster.local,DNS:{{ ansible_hostname }}\" build-server-full \"{{ ansible_hostname }}\" nopass"
         output: "{{ ansible_hostname }}"
   #      - args: "build-client-full kubelet nopass"
   #        output: kubelet

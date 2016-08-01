@@ -1,11 +1,9 @@
 ---
-- file: >
-    path=/etc/kubernetes/manifests
-    state=directory
-
-- file: >
-    path=/etc/kubernetes/ssl
-    state=directory
+- file: path={{ item }} state=directory
+  with_items:
+    - "{{ lookup('env','HOME') }}/.kube"
+    - /etc/kubernetes/manifests
+    - /etc/kubernetes/ssl
 
 - template: >
     src=kubeconfig.j2
@@ -13,6 +11,11 @@
   notify:
     - restart kube-proxy
     - restart kubelet
+
+- file: >
+    src=/var/lib/kubelet/kubeconfig
+    dest="{{ lookup('env','HOME') }}/.kube/config"
+    state=link
 
 - copy: >
     src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/hyperkube"

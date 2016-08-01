@@ -1,0 +1,7 @@
+- hosts: master117
+  become: yes
+  vars_files:
+    - vars_files/kube.yml
+    #{{ service_cluster_ip_range|ipaddr('net')|ipaddr(10)|ipaddr('address') }}
+  roles:
+    - { role: kube-addons }
