@@ -3,11 +3,7 @@
   vars_prompt:
     - name: kubernetes_version
       prompt: kubernetes version
-      default: "v1.3.3"
-      private: no
-    - name: kubernetes_checksum
-      prompt: "tar.gz checksum"
-      default: "sha256:a92a74a0d3f7d02d01ac2c8dfb5ee2e97b0485819e77b2110eb7c6b7c782478c"
+      default: "v1.3.4"
       private: no
     - name: pki_dir
       prompt: pki reletive directory
@@ -33,6 +29,7 @@
         path: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
       register: ca
       run_once: true
+      name: get ca.crt stat
 
     - local_action: "shell ./easyrsa build-client-full node-{{ ansible_hostname }} nopass"
       args:
@@ -48,20 +45,24 @@
         src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
         dest=/etc/kubernetes/ssl/ca.crt
       become: yes
+      name: copy ca.crt
 
     - copy: >
         src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/node-{{ ansible_hostname }}.crt"
         dest=/etc/kubernetes/ssl/kubecfg.crt
       become: yes
+      naem: copy kubecfg.crt
 
     - copy: >
         src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
         dest=/etc/kubernetes/ssl/kubecfg.key
         mode=0600
       become: yes
+      naem: copy kubecfg.key
 
     - command: "kubectl label --overwrite nodes {{ ansible_hostname }} {{ node.labels }}"
       become: yes
+      name: "set kubernetes node label
 
     - name: install glusterfs-client
       apt: >

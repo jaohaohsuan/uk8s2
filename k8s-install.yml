@@ -6,11 +6,11 @@
   vars_prompt:
     - name: kubernetes_version
       prompt: kubernetes version
-      default: "v1.3.3"
+      default: "v1.3.4"
       private: no
     - name: kubernetes_checksum
       prompt: "DOWNLOAD SHA256 checksum"
-      default: "a92a74a0d3f7d02d01ac2c8dfb5ee2e97b0485819e77b2110eb7c6b7c782478c"
+      default: "818acc1a8ba61cff434d4c0c5aa3d342d06e6907b565cfd8651b8cfcf3f0a1e6"
       private: no
   vars:
     # master_ip: 192.168.80.117

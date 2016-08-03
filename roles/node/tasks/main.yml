@@ -24,6 +24,8 @@
   notify:
     - restart kube-proxy
     - restart kubelet
+  tags:
+    - "upgrade:{{ kubernetes_version }}"
 
 - copy: src="{{ item }}.service" dest="/lib/systemd/system/{{ item }}.service"
   with_items:

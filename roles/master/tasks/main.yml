@@ -3,6 +3,12 @@
     src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/hyperkube"
     dest="/usr/local/bin/hyperkube"
     mode=0744
+  tags:
+    - "upgrade:{{ kubernetes_version }}"
+  notify:
+    - restart kube-apiserver
+    - restart kube-controller-manager
+    - restart kube-scheduler
 
 - copy: >
     src="{{ item }}.service"
@@ -11,6 +17,11 @@
     - kube-apiserver
     - kube-controller-manager
     - kube-scheduler
+  notify:
+    - reload systemd
+    - restart kube-apiserver
+    - restart kube-controller-manager
+    - restart kube-scheduler
 
 - setup: filter="{{ 'ansible_' + etcd_ifac }}"
   delegate_to: "{{ item }}"
@@ -27,13 +38,18 @@
     - kube-apiserver
     - kube-controller-manager
     - kube-scheduler
+  notify:
+    - reload systemd
+    - restart kube-apiserver
+    - restart kube-controller-manager
+    - restart kube-scheduler
 
-# - service: >
-#     name="{{ item }}"
-#     state=started
-#     enabled=yes
-#   with_items:
-#     - kube-apiserver
-#     - kube-controller-manager
-#     - kube-scheduler
+- service: >
+    name="{{ item }}"
+    state=started
+    enabled=yes
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
 

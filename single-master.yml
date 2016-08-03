@@ -4,6 +4,10 @@
         prompt: kubernetes api server
         default: master117
         private: no
+      - name: kubernetes_version
+        prompt: kubernetes version
+        default: "v1.3.4"
+        private: no
   hosts: "{{ kube_apiserver_host }}"
   become: yes
   vars_files:
@@ -14,4 +18,4 @@
     - { role: etcd, etcd_version: '2.2.5+dfsg-1', tags: [ 'etcd' ] }
     - { role: flannel, flannel_version: '0.5.5', tags: [ 'master' ] }
     - { role: glusterfs, glusterfs_version: '3.7.6-1ubuntu1', tags: [ 'pv' ] }
-    - { role: master, kubernetes_version: 'v1.3.3', tags: [ 'master' ] }
+    - { role: master, tags: [ 'master' ] }
