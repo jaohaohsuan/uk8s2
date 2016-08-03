@@ -10,7 +10,13 @@ use ansible to build kubernetes on ubuntu 16.04
 - `etcd_ifac`
 - ` flannel_etcd_group_name`
 
-notice: ubuntu xenial shoud set `ansible_python_interpreter=/usr/bin/python2.7`.
+*mandatory groups:*
+
+- glusters
+- etcd
+- nodes
+
+> notice: ubuntu xenial shoud set `ansible_python_interpreter=/usr/bin/python2.7`.
 
 ```
 localhost ansible_connection=local flannel_ifac=enp0s8 ansible_python_interpreter=/usr/bin/python2.7
@@ -30,6 +36,11 @@ localhost
 [nodes:vars]
 flannel_etcd_group_name=etcd
 
+[glusters]
+master117
+
+[glusters:vars]
+glusterfs_ifac=enp2s0f0
 ```
 **create your won cows list like this**
 
@@ -37,10 +48,7 @@ flannel_etcd_group_name=etcd
 -p 22 user@192.168.80.117
 -p 22 user@192.168.80.119
 ```
-
-*`-p` is ssh port*.
-
-later `setup-cows.yml` playbook will ask the **cows file path**.
+> `-p` is ssh port. Later `setup-cows.yml` playbook will ask the **cows file path**.
 
 **create ssh connection & install python 2.7 if possible**
 
