@@ -1,7 +1,53 @@
+- name: estabish storage
+  hosts: glusters
+  tasks:
+
 - hosts: master117
   become: yes
   vars_files:
-    - vars_files/kube.yml
+    - "vars_files/kube.yml"
     #{{ service_cluster_ip_range|ipaddr('net')|ipaddr(10)|ipaddr('address') }}
   roles:
     - { role: kube-addons }
+  vars:
+    glusterfs_pvs:
+      - name: gv0
+        vol: gv0
+        cap: 10Gi
+  tasks:
+    - name: gather facts from glusters
+      setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: True
+      with_items: "{{ groups['glusters'] }}"
+
+    - template: "src={{ item }}.j2 dest=/tmp/{{ item }}"
+      with_items:
+        - glusterfs-cluster-svc.yml
+        - glusterfs-cluster-ep.yml
+
+    - shell: "/usr/local/bin/kubectl apply -f /tmp/{{ item }}"
+      with_items:
+        - glusterfs-cluster-svc.yml
+        - glusterfs-cluster-ep.yml
+      tags:
+        - storage
+
+    - template: >
+       src=glusterfs-cluster-pv.yml.j2
+       dest="/tmp/glusterfs-cluster-pv-{{ item.name }}.yml"
+      with_items: "{{ glusterfs_pvs }}"
+
+    - command: "kubectl apply -f /tmp/glusterfs-cluster-pv-{{ item.name }}.yml"
+      with_items: "{{ glusterfs_pvs }}"
+      tags:
+        - storage
+
+    - copy: src=cassandra-petset.yml dest=/tmp/cassandra-petset.yml
+
+
+    - command: kubectl apply -f /tmp/cassandra-petset.yml
+      become: yes
+      tags:
+        - cassandra
+

@@ -1,5 +1,7 @@
 # uk8s2
+use ansible to build kubernetes on ubuntu 16.04
 
+###installation
 **create your inventory file at `./inventory` directory**
 
 *mandatory vars:*
@@ -63,7 +65,22 @@ ansible-playbook -i inventory/home single-master.yml
 ```
 
 **add nodes to serve**
+support tags: `init`
 
 ```
 ansible-playbook -i inventory/home become-node.yml
+
+# if already a node
+ansible-playbook -i inventory/home become-node.yml --skip-tags "init"
 ```
+
+###deploy infra
+
+support tags: `cassandra`
+
+```
+ansible-playbook -i inventory/home infra.yml
+
+# skip cassandra petset deploy
+ansible-playbook -i inventory/home infra.yml --skip-tags "cassandra"
+````

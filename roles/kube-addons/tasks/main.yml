@@ -1,21 +1,14 @@
 ---
 
-- template: >
-    src=skydns-rc.yaml.j2
-    dest=/tmp/skydns-svc.yaml.j2
-
-- command: kubectl apply -f /tmp/skydns-svc.yaml.j2
+- include: "skydns.yml"
+  tags:
+    - dns
 
 # - shell: |
 #     echo \"{{ lookup('template', 'skydns-svc.yaml.j2') }}\" | /usr/local/bin/kubectl apply -f -
 #   register: skydns
 #   failed_when: skydns.rc != 0
 
-- template: >
-    src=skydns-rc.yaml.j2
-    dest=/tmp/skydns-rc.yaml
-
-- command: kubectl apply -f /tmp/skydns-rc.yaml
 
 # - shell: "echo \"\'{{ lookup('template', 'skydns-rc.yaml.j2') }}\'\" | /usr/local/bin/kubectl apply -f -"
 #   register: skydns

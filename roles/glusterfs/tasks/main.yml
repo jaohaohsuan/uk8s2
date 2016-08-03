@@ -6,3 +6,11 @@
   
 - name: install glusterfs-client
   apt: name=glusterfs-client={{ glusterfs_version }}
+
+- name: add kubernetes glusterfs-cluster endpoint
+  debug: msg="{{ lookup('template', 'glusterfs-cluster-ep.yml.j2') }}"
+
+# - tmplate: >
+#     src=glusterfs-cluster-ep.yml.j2
+#     dest=/tmp/glusterfs-cluster-ep.yml
+  
