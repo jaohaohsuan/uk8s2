@@ -16,5 +16,11 @@ localhost
 flannel_etcd_group_name=etcd
 kube_api_servers=https://192.168.80.117:443
 
+[glusters]
+master117
+
+[glusters:vars]
+glusterfs_ifac=enp2s0f0 
+
 [mac]
-imac ansible_host=192.168.80.118 ansible_connection=local
+imac ansible_host=192.168.80.118 ansible_user=henry
