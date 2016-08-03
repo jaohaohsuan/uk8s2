@@ -9,8 +9,8 @@
       default: "v1.3.3"
       private: no
     - name: kubernetes_checksum
-      prompt: "tar.gz checksum"
-      default: "sha256:a92a74a0d3f7d02d01ac2c8dfb5ee2e97b0485819e77b2110eb7c6b7c782478c"
+      prompt: "DOWNLOAD SHA256 checksum"
+      default: "a92a74a0d3f7d02d01ac2c8dfb5ee2e97b0485819e77b2110eb7c6b7c782478c"
       private: no
   vars:
     # master_ip: 192.168.80.117
@@ -28,7 +28,7 @@
     - get_url: >
         url=https://github.com/kubernetes/kubernetes/releases/download/{{ kubernetes_version }}/kubernetes.tar.gz
         dest="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}.tar.gz"
-        checksum={{ kubernetes_checksum }}
+        checksum=sha256:{{ kubernetes_checksum }}
       name: download k8s from github release tag {{ kubernetes_version }}
 
     - unarchive: >
