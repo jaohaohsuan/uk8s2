@@ -3,9 +3,31 @@
     dest=/etc/default/grub 
     line="GRUB_CMDLINE_LINUX=\"cgroup_enable=memory swapaccount=1\"" 
     regexp="cgroup_enable"
-    state=present 
-  notify:
-    - update grub
-    - reboot machine
-    - wait server back
+    state=present
   name: add support memory limit
+  register: cgroup_enable
+
+- name: update grub
+  command: update-grub
+  when: cgroup_enable.changed
+
+- name: reboot machine
+  shell: sleep 2 && shutdown -r now
+  async: 600
+  poll: 0
+  ignore_errors: true
+  when: cgroup_enable.changed
+
+- name: "wait server back"
+  local_action: wait_for
+  args:
+    host: "{{ ansible_host }}"
+    port: "{{ ansible_port }}"
+    state: started
+    delay: 5
+    timeout: 600
+    connect_timeout: 30
+  become: no
+  when: cgroup_enable.changed
+
+# references: http://docs.ansible.com/ansible/playbooks_async.html

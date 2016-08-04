@@ -1,0 +1,2 @@
+node:
+  labels: "env=production"

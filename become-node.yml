@@ -7,11 +7,10 @@
       private: no
     - name: pki_dir
       prompt: pki reletive directory
-      default: master117
+      default: master2
       private: no
     - name: nodes
       prompt: hosts
-      default: nodes
       private: no
     - name: kube_api_servers
       prompt: kubernetes api servers
@@ -27,6 +26,7 @@
     - { role: flannel, flannel_version: '0.5.5', become: yes, tags: ['init'] }
     - { role: node, become: yes }
   hosts: "{{ nodes }}"
+  become: yes
   tasks:
     - local_action: stat
       args:
@@ -48,33 +48,29 @@
     - copy: >
         src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
         dest=/etc/kubernetes/ssl/ca.crt
-      become: yes
+        mode=0644
       name: copy ca.crt
 
     - copy: >
         src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/node-{{ ansible_hostname }}.crt"
         dest=/etc/kubernetes/ssl/kubecfg.crt
-      become: yes
-      naem: copy kubecfg.crt
+        mode=0740
+        owner="{{ ansible_user }}"
+      name: "copy kubecfg.crt"
 
     - copy: >
         src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
         dest=/etc/kubernetes/ssl/kubecfg.key
-        mode=0600
-      become: yes
-      naem: copy kubecfg.key
-
-    - command: "kubectl label --overwrite nodes {{ ansible_hostname }} {{ node.labels }}"
-      become: yes
-      name: "set kubernetes node label"
+        mode=0740
+        owner="{{ ansible_user }}"
+      name: copy kubecfg.key
 
     - name: install glusterfs-client
       apt: >
-        name=glusterfs-client={{ glusterfs_version }} 
+        name="glusterfs-client={{ glusterfs_version }}"
         state=present
         update_cache=yes
         cache_valid_time=86400
-      become: yes
 
     - file: >
         path=/etc/systemd/system/docker.service.d 
@@ -100,8 +96,6 @@
       register: docker0_result
       name: ip a
 
-#- debug: var=docker0_result
-
     - shell: |
         ip link set docker0 down 2>&1 || true
         brctl delbr docker0 down 2>&1 || true
@@ -111,4 +105,9 @@
       notify:
         - reload systemd
         - restart docker
+
+    - command: "kubectl label --overwrite nodes {{ ansible_hostname }} {{ node.labels }}"
+      become: yes
+      when: node is defined
+      name: "set kubernetes node label"
 

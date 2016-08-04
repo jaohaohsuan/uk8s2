@@ -2,9 +2,10 @@
 - include: "cgroup.yml"
   name: config cgroup
 
-- apt_key: >
-    keyserver=hkp://p80.pool.sks-keyservers.net:80 
-    id=58118E89F3A912897C070ADBF76221572C52609D
+# - apt_key: >
+#     keyserver=hkp://p80.pool.sks-keyservers.net:80 
+#     id=58118E89F3A912897C070ADBF76221572C52609D
+- apt_key: keyserver=keyserver.ubuntu.com id=58118E89F3A912897C070ADBF76221572C52609D
 
 - apt_repository: >
     repo='deb https://apt.dockerproject.org/repo ubuntu-xenial main'
@@ -15,7 +16,6 @@
     name=docker-engine={{ docker_version }} 
     state=present
     update_cache=yes
-    cache_valid_time=86400
 
 # - shell: |
 #     curl -fsSL https://get.docker.com/ | sh

@@ -50,6 +50,8 @@
         src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/kubectl"
         dest=/usr/local/bin/kubectl
         state=link
+        mode=0754
+        owner="{{ ansible_user }}"
       become: yes
 
     - name: enable kubectl completion
@@ -58,4 +60,3 @@
         block: |
           # kubectl completion
           source <(kubectl completion bash)
-      become: yes

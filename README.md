@@ -74,7 +74,16 @@ ansible-playbook -i inventory/home single-master.yml
 ```
 
 **add nodes to serve**
-support tags: `init` and `upgrade:?`.
+
+create a file(named as your `machine`) in `host_vars` directory like this
+
+```
+# kubernetes node labels
+node:
+  labels: "env=production"
+```
+
+`become-node.yml` support tags: `init` and `upgrade:?`.
 
 ```
 ansible-playbook -i inventory/home become-node.yml

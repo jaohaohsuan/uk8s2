@@ -1,13 +1,26 @@
 ---
-- file: path={{ item }} state=directory
+
+- debug: msg="{{ lookup('env','HOME') }}"
+
+- file: path="{{ item }}" state=directory
   with_items:
-    - "{{ lookup('env','HOME') }}/.kube"
     - /etc/kubernetes/manifests
     - /etc/kubernetes/ssl
+
+- file: path="{{ item }}" owner="{{ ansible_user }}" mode=0751 state=directory
+  with_items:
+    - "/var/lib/kubelet"
+
+- file: path="{{ item }}" state=directory mode=0751 owner="{{ ansible_user }}"
+  with_items:
+    - "{{ lookup('env','HOME') }}/.kube"
+  name: set user home directory permision
 
 - template: >
     src=kubeconfig.j2
     dest=/var/lib/kubelet/kubeconfig
+    mode=0640
+    owner="{{ ansible_user }}"
   notify:
     - restart kube-proxy
     - restart kubelet
@@ -16,6 +29,7 @@
     src=/var/lib/kubelet/kubeconfig
     dest="{{ lookup('env','HOME') }}/.kube/config"
     state=link
+    owner="{{ ansible_user }}"
 
 - copy: >
     src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/hyperkube"
