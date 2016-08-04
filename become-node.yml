@@ -106,8 +106,7 @@
         - reload systemd
         - restart docker
 
-    - command: "kubectl label --overwrite nodes {{ ansible_hostname }} {{ node.labels }}"
-      become: yes
+    - local_action: "command kubectl label --overwrite nodes {{ ansible_hostname }} {{ node.labels }}"
       when: node is defined
       name: "set kubernetes node label"
 
