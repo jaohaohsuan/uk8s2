@@ -2,7 +2,7 @@
   vars_prompt:
       - name: kube_apiserver_host
         prompt: kubernetes api server
-        default: master117
+        default: master2
         private: no
       - name: kubernetes_version
         prompt: kubernetes version
@@ -16,6 +16,5 @@
     downloads_dir: "{{ playbook_dir }}/downloads"
   roles:
     - { role: etcd, etcd_version: '2.2.5+dfsg-1', tags: [ 'etcd' ] }
-    - { role: flannel, flannel_version: '0.5.5', tags: [ 'master' ] }
     - { role: glusterfs, glusterfs_version: '3.7.6-1ubuntu1', tags: [ 'pv' ] }
     - { role: master, tags: [ 'master' ] }

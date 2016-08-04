@@ -1,4 +1,7 @@
 ---
+- set_fact:
+    flannel_config: "{{ lookup('template', 'conf.json.j2') }}"
+
 - command: "etcdctl get /{{ kube['cluster-domain'] }}/network/config"
   register: result
   changed_when: result.rc != 0
@@ -7,4 +10,4 @@
 
 - name: "etcdctl set {{ flannel_config }}"
   command: "etcdctl set /{{ kube['cluster-domain'] }}/network/config {{ flannel_config }}"
-  when: '{{ config }} not in result.stdout|default("")'
+  when: '{{ flannel_config }} not in result.stdout|default("")'

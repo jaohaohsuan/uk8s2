@@ -5,7 +5,7 @@
 - name: restart kube-apiserver
   service: name=kube-apiserver state=restarted
 
-- name: kube-controller-manager
+- name: restart kube-controller-manager
   service: name=kube-controller-manager state=restarted
 
 - name: restart kube-scheduler

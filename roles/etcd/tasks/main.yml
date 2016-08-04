@@ -15,4 +15,7 @@
   notify:
     - reload systemd
     - restart etcd
-    - config flannel
+
+- name: config flannel
+  include: "config-flannel.yml"
+  become: yes

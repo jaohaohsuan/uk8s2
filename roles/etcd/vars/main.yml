@@ -1,4 +1,3 @@
 etcd_advertise_host: "{{ hostvars[inventory_hostname]['ansible_' + etcd_ifac].ipv4.address }}"
 
-flannel_config: "{{ lookup('template', 'conf.json.j2') }}"
 # advertise_host: hostvars[inventory_hostname]['ansible_default_ipv4'].address

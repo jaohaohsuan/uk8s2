@@ -9,9 +9,9 @@
     state=restarted
   become: yes
 
-- name: config flannel
-  include: "config-flannel.yml"
-  become: yes
+# - name: config flannel
+#   include: "config-flannel.yml"
+#   become: yes
 # works on ansible 2.2
 #  systemd: >
 #    name=etcd

@@ -66,7 +66,7 @@
 
     - command: "kubectl label --overwrite nodes {{ ansible_hostname }} {{ node.labels }}"
       become: yes
-      name: "set kubernetes node label
+      name: "set kubernetes node label"
 
     - name: install glusterfs-client
       apt: >
@@ -75,4 +75,40 @@
         update_cache=yes
         cache_valid_time=86400
       become: yes
+
+    - file: >
+        path=/etc/systemd/system/docker.service.d 
+        state=directory 
+        mode=0644
+      name: docker drop-ins directory must be present
+
+    - copy: >
+        src=flannel.conf
+        dest=/etc/systemd/system/docker.service.d/flannel.conf
+        mode=0644
+
+    - lineinfile:
+        dest: "/lib/systemd/system/docker.service"
+        backrefs: yes
+        regexp: "^ExecStart=/usr/bin/docker daemon -H fd://"
+        line: "ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS"
+      name: add $DOCKER_OPTS to docker.service ExecStart
+
+    - shell: |
+        docker run --rm busybox netstat -r | grep `ip a | grep flannel\.[0-9]$ | awk '{print $2}' | sed 's/\/.*//'`
+      changed_when: docker0_result.rc != 0
+      register: docker0_result
+      name: ip a
+
+#- debug: var=docker0_result
+
+    - shell: |
+        ip link set docker0 down 2>&1 || true
+        brctl delbr docker0 down 2>&1 || true
+      name: clean up docker0
+      when: docker0_result.rc != 0
+      become: yes
+      notify:
+        - reload systemd
+        - restart docker
 
