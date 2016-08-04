@@ -27,22 +27,20 @@
   hosts: xenial
   gather_facts: false
   tasks:
-    - name: install python 2.7
-      raw: sudo apt update && sudo apt install -y python2.7
-      tags:
-        - upgrade
-    - raw: python -V
-    - raw: sudo apt upgrade -y
-      tags:
-        - upgrade
+    - raw: sudo apt update && sudo apt install -y python2.7
+    # - raw: python -V
+    # - raw: sudo apt upgrade -y
+    #   tags:
+    #     - upgrade
 
 - name: install ansible needs
   hosts: xenial
   gather_facts: true
   pre_tasks:
+  tags:
+    - tools
   tasks:
-    - name: "install {{ item }}"
-      apt: >
+    - apt: >
         name={{ item }}
         update_cache=yes
         cache_valid_time=86400
@@ -55,6 +53,4 @@
         - htop
         - fish
       become: yes
-      tags:
-        - upgrade
   post_tasks:

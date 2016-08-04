@@ -16,7 +16,7 @@ use ansible to build kubernetes on ubuntu 16.04
 - etcd
 - nodes
 
-> notice: ubuntu xenial shoud set `ansible_python_interpreter=/usr/bin/python2.7`.
+> notice: ubuntu 16.04 shoud set `ansible_python_interpreter=/usr/bin/python2.7`.
 
 ```
 localhost ansible_connection=local flannel_ifac=enp0s8 ansible_python_interpreter=/usr/bin/python2.7
@@ -24,7 +24,6 @@ master117 ansible_host=192.168.80.117 flannel_ifac=enp2s0f0 etcd_ifac=enp2s0f0 a
 
 [xenial]
 master117
-localhost
 
 [etcd]
 master117
