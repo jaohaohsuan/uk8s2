@@ -1,5 +1,5 @@
 ---
-- template: src=skydns-rc.yaml.j2 dest=/tmp/skydns-svc.yml
+- template: src=skydns-svc.yaml.j2 dest=/tmp/skydns-svc.yml
 
 - command: kubectl apply -f /tmp/skydns-svc.yml
   name: create skydns-svc
