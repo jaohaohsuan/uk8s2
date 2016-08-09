@@ -1,53 +1,147 @@
-- name: estabish storage
-  hosts: glusters
-  tasks:
-
-- hosts: master117
+---
+- hosts: localhost
   become: yes
-  vars_files:
-    - "vars_files/kube.yml"
-    #{{ service_cluster_ip_range|ipaddr('net')|ipaddr(10)|ipaddr('address') }}
-  roles:
-    - { role: kube-addons }
+  vars_prompt:
+    - name: kubernetes_version
+      prompt: kubernetes version
+      default: "v1.3.4"
+      private: no
+    - name: pki_dir
+      prompt: pki reletive directory
+      private: no
+    - name: kube_api_server
+      prompt: target kubernetes api server
+      private: no
+      default: "https://192.168.1.110:443"
   vars:
     glusterfs_pvs:
       - name: gv0
         vol: gv0
-        cap: 10Gi
+        cap: 3Gi
+      - name: gv1
+        vol: gv1
+        cap: 3Gi
+      - name: gv2
+        vol: gv2
+        cap: 3Gi
   tasks:
-    - name: gather facts from glusters
-      setup:
-      delegate_to: "{{ item }}"
-      delegate_facts: True
-      with_items: "{{ groups['glusters'] }}"
+    - file: >
+        path="{{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}"
+        state=directory
 
-    - template: "src={{ item }}.j2 dest=/tmp/{{ item }}"
-      with_items:
-        - glusterfs-cluster-svc.yml
-        - glusterfs-cluster-ep.yml
+    - local_action: stat
+      args:
+        path: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
+      register: ca
+      run_once: true
+      name: get ca.crt stat
 
-    - shell: "/usr/local/bin/kubectl apply -f /tmp/{{ item }}"
-      with_items:
-        - glusterfs-cluster-svc.yml
-        - glusterfs-cluster-ep.yml
-      tags:
-        - storage
+    - local_action: "shell ./easyrsa build-client-full node-{{ ansible_hostname }} nopass"
+      args:
+        chdir: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+        creates: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
+      environment:
+        EASYRSA_PKI: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}"
+        EASYRSA: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+      when: ca.stat.exists
+      name: generate client certificate authentication
 
-    - template: >
-       src=glusterfs-cluster-pv.yml.j2
-       dest="/tmp/glusterfs-cluster-pv-{{ item.name }}.yml"
-      with_items: "{{ glusterfs_pvs }}"
+    - copy: >
+        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
+        dest="{{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/ca.crt"
+        mode=0644
+      name: copy ca.crt
 
-    - command: "kubectl apply -f /tmp/glusterfs-cluster-pv-{{ item.name }}.yml"
-      with_items: "{{ glusterfs_pvs }}"
-      tags:
-        - storage
+    - copy: >
+        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/node-{{ ansible_hostname }}.crt"
+        dest="{{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/kubecfg.crt"
+        mode=0740
+        owner="{{ ansible_user }}"
+      name: "copy kubecfg.crt"
 
-    - copy: src=cassandra-petset.yml dest=/tmp/cassandra-petset.yml
+    - copy: >
+        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
+        dest="{{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/kubecfg.key"
+        mode=0740
+        owner="{{ ansible_user }}"
+      name: copy kubecfg.key
+
+    - file: >
+        src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/kubernetes/platforms/linux/amd64/kubectl"
+        path=/usr/local/bin/kubectl
+        state=link
+
+    - command: >
+        kubectl config set-credentials 
+        {{ ansible_hostname }}-{{ ansible_user }} 
+        --client-key={{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/kubecfg.key 
+        --client-certificate={{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/kubecfg.crt
+      name: kubectl config set-credentials
+
+    - command: >
+        kubectl config set-cluster {{ pki_dir }}-cluster
+        --certificate-authority={{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/ca.crt 
+        --server={{ kube_api_server }}
+      name: kubectl config set-cluster
+
+    - command: >
+        kubectl config set-context {{ pki_dir }}-context 
+        --user={{ ansible_hostname }}-{{ ansible_user }} 
+        --cluster={{ pki_dir }}-cluster
+      name: kubectl config set-context
+
+    - command: >
+        kubectl config use-context {{ pki_dir }}-context
+      name: Sets the current-context in a kubeconfig file
+
+- hosts: localhost
+  vars_files:
+    - vars_files/kube.yml
+  roles:
+    - { role: kube-addons }
+  
+    # - name: gather facts from glusters
+    #   setup:
+    #   delegate_to: "{{ item }}"
+    #   delegate_facts: True
+    #   with_items: "{{ groups['glusters'] }}"
+    #   tags:
+    #     - storage
+
+    # - template: "src={{ item }}.j2 dest=/tmp/{{ item }}"
+    #   with_items:
+    #     - glusterfs-cluster-svc.yml
+    #     - glusterfs-cluster-ep.yml
+    #   tags:
+    #     - storage
+
+    # - shell: "/usr/local/bin/kubectl apply -f /tmp/{{ item }}"
+    #   with_items:
+    #     - glusterfs-cluster-svc.yml
+    #     - glusterfs-cluster-ep.yml
+    #   tags:
+    #     - storage
+    #   name: estabish glusterfs-cluster endpoint & service
+
+    # - template: >
+    #    src=glusterfs-cluster-pv.yml.j2
+    #    dest="/tmp/glusterfs-cluster-pv-{{ item.name }}.yml"
+    #   with_items: "{{ glusterfs_pvs }}"
+    #   tags:
+    #     - storage
+
+    # - command: "kubectl apply -f /tmp/glusterfs-cluster-pv-{{ item.name }}.yml"
+    #   with_items: "{{ glusterfs_pvs }}"
+    #   tags:
+    #     - storage
+
+    # - copy: src=cassandra-petset.yml dest=/tmp/cassandra-petset.yml
+    #   tags:
+    #     - cassandra
 
 
-    - command: kubectl apply -f /tmp/cassandra-petset.yml
-      become: yes
-      tags:
-        - cassandra
+    # - command: kubectl apply -f /tmp/cassandra-petset.yml
+    #   become: yes
+    #   tags:
+    #     - cassandra
 
