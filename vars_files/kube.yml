@@ -5,4 +5,8 @@ kube:
 
 flannel_network: "172.16.0.0/16"
 flannel_backends: "vxlan"
+
+registry_pv_hostPath: /data/pv/registry
+
+
   

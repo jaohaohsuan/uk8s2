@@ -1,8 +1,8 @@
 ---
 
 - include: "skydns.yml"
-  tags:
-    - dns
+
+- include: "registry.yml"
 
 # - shell: |
 #     echo \"{{ lookup('template', 'skydns-svc.yaml.j2') }}\" | /usr/local/bin/kubectl apply -f -

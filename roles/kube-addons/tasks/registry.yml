@@ -1,0 +1,29 @@
+---
+
+- template: src=registry-pv.yml.j2 dest=/tmp/registry-pv.yml
+  register: registry_pv
+
+- command: kubectl apply -f /tmp/registry-pv.yml
+  name: apply registry-pv
+  when: registry_pv.changed
+
+- template: src=registry-pvc.yml.j2 dest=/tmp/registry-pvc.yml
+  register: registry_pvc
+
+- command: kubectl apply -f /tmp/registry-pvc.yml
+  name: apply registry-pvc
+  when: registry_pvc.changed
+
+- copy: src=registry-svc.yml dest=/tmp/registry-svc.yml
+  register: registry_svc
+
+- command: kubectl apply -f /tmp/registry-svc.yml
+  name: apply registry-svc
+  when: registry_svc.changed
+
+- copy: src=registry-rc.yml dest=/tmp/registry-rc.yml
+  register: registry_rc
+
+- command: kubectl apply -f /tmp/registry-rc.yml
+  name: apply registry-rc
+  when: registry_rc.changed
