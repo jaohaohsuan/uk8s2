@@ -46,7 +46,6 @@
     - kubelet
     - kube-proxy
   notify:
-    - reload systemd
     - restart kube-proxy
     - restart kubelet
 
@@ -55,11 +54,51 @@
     - kubelet
     - kube-proxy
   notify:
-    - reload systemd
     - restart kube-proxy
     - restart kubelet
 
-- service: name={{ item }} state=started enabled=yes
+- local_action: stat
+  args:
+    path: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
+  register: ca
+  run_once: true
+  name: get ca.crt stat
+
+- local_action: "shell ./easyrsa build-client-full node-{{ ansible_hostname }} nopass"
+  args:
+    chdir: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+    creates: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
+  environment:
+    EASYRSA_PKI: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}"
+    EASYRSA: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+  when: ca.stat.exists
+  name: generate client certificate authentication
+
+- copy: >
+    src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
+    dest=/etc/kubernetes/ssl/ca.crt
+    mode=0644
+  name: copy ca.crt
+
+- copy: >
+    src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/node-{{ ansible_hostname }}.crt"
+    dest=/etc/kubernetes/ssl/kubecfg.crt
+    mode=0740
+    owner="{{ ansible_user }}"
+  name: "copy kubecfg.crt"
+
+- copy: >
+    src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
+    dest=/etc/kubernetes/ssl/kubecfg.key
+    mode=0740
+    owner="{{ ansible_user }}"
+  name: copy kubecfg.key
+
+- command: systemctl daemon-reload
+  changed_when: false
+
+- systemd: state=started name="{{ item }}" enabled=yes
   with_items:
     - kubelet
     - kube-proxy
+  name: start kube services

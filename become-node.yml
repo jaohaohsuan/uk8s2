@@ -7,7 +7,6 @@
       private: no
     - name: pki_dir
       prompt: pki reletive directory
-      default: master2
       private: no
     - name: nodes
       prompt: hosts
@@ -22,55 +21,20 @@
     downloads_dir: "{{ playbook_dir }}/downloads"
     glusterfs_version: "3.7.6-1ubuntu1"
   roles:
-    - { role: docker, docker_version: '1.11.2-0~xenial', become: yes, tags: ['init'] }
-    - { role: flannel, flannel_version: '0.5.5', become: yes, tags: ['init'] }
-    - { role: node, become: yes }
+    - { role: docker, docker_version: '1.12.0-0~xenial', tags: ['init'] }
+    - { role: flannel, flannel_version: '0.5.5', tags: ['init'] }
+    - { role: node }
   hosts: "{{ nodes }}"
   become: yes
   tasks:
-    - local_action: stat
-      args:
-        path: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
-      register: ca
-      run_once: true
-      name: get ca.crt stat
-
-    - local_action: "shell ./easyrsa build-client-full node-{{ ansible_hostname }} nopass"
-      args:
-        chdir: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
-        creates: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
-      environment:
-        EASYRSA_PKI: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}"
-        EASYRSA: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
-      when: ca.stat.exists
-      name: generate client certificate authentication
-
-    - copy: >
-        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
-        dest=/etc/kubernetes/ssl/ca.crt
-        mode=0644
-      name: copy ca.crt
-
-    - copy: >
-        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/node-{{ ansible_hostname }}.crt"
-        dest=/etc/kubernetes/ssl/kubecfg.crt
-        mode=0740
-        owner="{{ ansible_user }}"
-      name: "copy kubecfg.crt"
-
-    - copy: >
-        src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
-        dest=/etc/kubernetes/ssl/kubecfg.key
-        mode=0740
-        owner="{{ ansible_user }}"
-      name: copy kubecfg.key
-
     - name: install glusterfs-client
       apt: >
         name="glusterfs-client={{ glusterfs_version }}"
         state=present
         update_cache=yes
         cache_valid_time=86400
+      tags:
+        - glusterfs
 
     - file: >
         path=/etc/systemd/system/docker.service.d 
@@ -82,31 +46,47 @@
         src=flannel.conf
         dest=/etc/systemd/system/docker.service.d/flannel.conf
         mode=0644
-
-    - lineinfile:
-        dest: "/lib/systemd/system/docker.service"
-        backrefs: yes
-        regexp: "^ExecStart=/usr/bin/docker daemon -H fd://"
-        line: "ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS"
-      name: add $DOCKER_OPTS to docker.service ExecStart
-
-    - shell: |
-        docker run --rm busybox netstat -r | grep `ip a | grep flannel\.[0-9]$ | awk '{print $2}' | sed 's/\/.*//'`
-      changed_when: docker0_result.rc != 0
-      register: docker0_result
-      name: ip a
-
-    - shell: |
-        ip link set docker0 down 2>&1 || true
-        brctl delbr docker0 down 2>&1 || true
-      name: clean up docker0
-      when: docker0_result.rc != 0
-      become: yes
       notify:
         - reload systemd
         - restart docker
 
-    - local_action: "command kubectl label --overwrite nodes {{ ansible_hostname }} {{ node.labels }}"
-      when: node is defined
-      name: "set kubernetes node label"
+    - copy: >
+        src=mirrors.conf
+        dest=/etc/systemd/system/docker.service.d/mirrors.conf
+        mode=0644
+      notify:
+        - reload systemd
+        - restart docker
+      tags:
+        - use-docker-mirror
+
+    - lineinfile:
+        dest: "/lib/systemd/system/docker.service"
+        backrefs: yes
+        regexp: "^ExecStart=/usr/bin/dockerd -H fd://"
+        line: "ExecStart=/usr/bin/dockerd -H fd:// $DOCKER_OPTS $DOCKER_MIRROR_OPTIONS"
+      name: add $DOCKER_OPTS to docker.service ExecStart
+      notify:
+        - reload systemd
+        - restart docker
+
+    # - shell: |
+    #     docker run --rm busybox netstat -r | grep `ip a | grep flannel\.[0-9]$ | awk '{print $2}' | sed 's/\/.*//'`
+    #   changed_when: docker0_result.rc != 0
+    #   register: docker0_result
+    #   name: ip a
+
+    # - shell: |
+    #     ip link set docker0 down 2>&1 || true
+    #     brctl delbr docker0 down 2>&1 || true
+    #   name: clean up docker0
+    #   when: docker0_result.rc != 0
+    #   become: yes
+    #   notify:
+    #     - reload systemd
+    #     - restart docker
+
+    # - local_action: "command kubectl label --overwrite nodes {{ ansible_hostname }} {{ node.labels }}"
+    #   when: node is defined
+    #   name: "set kubernetes node label"
 

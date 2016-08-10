@@ -83,10 +83,10 @@ node:
   labels: "env=production"
 ```
 
-`become-node.yml` support tags: `init` and `upgrade:?`.
+`become-node.yml` support tags: `init`, `use-docker-mirror`, and `upgrade:?`.
 
 ```
-ansible-playbook -i inventory/home become-node.yml
+ansible-playbook -i inventory/home become-node.yml --skip-tags "use-docker-mirror"
 
 # if already a node
 ansible-playbook -i inventory/home become-node.yml --skip-tags "init"

@@ -2,8 +2,7 @@
 - name: gen cert & tokens
   vars_prompt:
     - name: kube_apiserver_host
-      prompt: kubernetes api server
-      default: master117
+      prompt: kubernetes api server host
       private: no
     - name: ca_cn
       prompt: CA Root CN
@@ -11,7 +10,6 @@
       default: cluster.local
     - name: pki_dir
       prompt: pki reletive directory
-      default: master117
       private: no
   hosts: "{{ kube_apiserver_host }}"
   vars:
@@ -21,12 +19,8 @@
         output: ca
       - args: "--batch --req-cn={{ ca_cn }} build-ca nopass" 
         output: ca
-      - args: "--subject-alt-name=\"IP:{{ ansible_host }},IP:10.254.0.1,IP:192.168.1.150,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.cluster.local,DNS:{{ ansible_hostname }}\" build-server-full \"{{ ansible_hostname }}\" nopass"
+      - args: "--subject-alt-name=\"IP:{{ ansible_host }},IP:10.254.0.1,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.cluster.local,DNS:{{ ansible_hostname }}\" build-server-full \"{{ ansible_hostname }}\" nopass"
         output: "{{ ansible_hostname }}"
-  #      - args: "build-client-full kubelet nopass"
-  #        output: kubelet
-      # - args: "build-client-full kubecfg nopass"
-      #   output: kubecfg
   tasks:
     - local_action: file
       args:

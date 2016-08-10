@@ -35,6 +35,7 @@
         src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}.tar.gz"
         dest="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/"
         creates={{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/kubernetes/version
+        exclude="kubernetes/docs,kubernetes/server/kubernetes-server-linux-ppc64le.tar.gz,kubernetes/server/kubernetes-server-linux-arm64.tar.gz,kubernetes/server/kubernetes-server-linux-arm.tar.gz"
         copy=no
       name: "extract kubernetes-{{ kubernetes_version }}.tar.gz"
 
@@ -43,20 +44,24 @@
         src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/kubernetes/server/kubernetes-server-linux-amd64.tar.gz"
         dest="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/"
         creates={{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/hyperkube
-        copy=no
+        remote_src=no
 
-    - name: install kubectl
-      file: >
-        src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/kubectl"
-        dest=/usr/local/bin/kubectl
-        state=link
-        mode=0754
-        owner="{{ ansible_user }}"
-      become: yes
+    # - name: install kubectl
+    #   file: >
+    #     src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/kubectl"
+    #     dest=/usr/local/bin/kubectl
+    #     state=link
+    #     mode=0754
+    #     owner="{{ ansible_user }}"
+    #   become: yes
+    #   tags:
+    #     - "man"
 
-    - name: enable kubectl completion
-      blockinfile:
-        dest: ~/.bashrc
-        block: |
-          # kubectl completion
-          source <(kubectl completion bash)
+    # - name: enable kubectl completion
+    #   blockinfile:
+    #     dest: ~/.bashrc
+    #     block: |
+    #       # kubectl completion
+    #       source <(kubectl completion bash)
+    #   tags:
+    #     - "man"
