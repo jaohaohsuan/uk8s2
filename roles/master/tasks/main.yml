@@ -44,12 +44,11 @@
     - restart kube-controller-manager
     - restart kube-scheduler
 
-- service: >
-    name="{{ item }}"
-    state=started
-    enabled=yes
+- systemd: state=started name="{{ item }}" daemon_reload=yes enabled=yes
   with_items:
     - kube-apiserver
     - kube-controller-manager
     - kube-scheduler
+    
+
 

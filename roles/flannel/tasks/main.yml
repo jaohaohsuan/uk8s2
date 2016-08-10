@@ -10,6 +10,7 @@
     src="{{ downloads_dir }}/flannel-{{ flannel_version }}-linux-amd64.tar.gz"
     dest="/opt"
     copy=true
+    creates="/opt/flannel-{{ flannel_version }}/flanneld"
   name: "extract flannel-{{ flannel_version }}-linux-amd64.tar.gz"
   notify:
     - reload systemd
@@ -44,4 +45,4 @@
     - reload systemd
     - restart flannel
 
-- service: name=flannel enabled=yes state=started
+- systemd: name=flannel enabled=yes state=started daemon_reload=yes
