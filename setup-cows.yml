@@ -5,7 +5,6 @@
   vars_prompt:
     - name: cows_path
       prompt: cows file path
-      default: xenial
       private: no
     - name: identify_file
       prompt: ssh public key location

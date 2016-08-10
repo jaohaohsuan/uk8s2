@@ -1,0 +1,20 @@
+localhost ansible_connection=local flannel_ifac=enp0s8 ansible_python_interpreter=/usr/bin/python2.7 etcd_ifac=eno1 glusterfs_ifac=eno1
+master2 ansible_host=192.168.1.110 ansible_user=inu ansible_port=22 flannel_ifac=eno1 etcd_ifac=eno1 ansible_python_interpreter=/usr/bin/python2.7
+
+[xenial]
+master2
+
+[etcd]
+master2
+
+[nodes]
+master2
+
+[nodes:vars]
+flannel_etcd_group_name=etcd
+
+[glusters]
+master2
+
+[glusters:vars]
+glusterfs_ifac=eno1 
