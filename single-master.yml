@@ -19,7 +19,3 @@
     - { role: glusterfs, glusterfs_version: '3.7.6-1ubuntu1', tags: [ 'glusterfs' ] }
     - { role: master, tags: [ 'master' ] }
   tasks:
-    - file: path={{ registry_pv_hostPath }} state=directory
-      name: "{{ registry_pv_hostPath }} directory is present"
-      tags:
-        - storage

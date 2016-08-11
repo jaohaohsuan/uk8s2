@@ -1,4 +1,5 @@
-*.swp
+	*.swp
 *.retry
 downloads
 .DS_Store
+.vagrant

@@ -1,12 +1,4 @@
 ---
-
-- template: src=registry-pv.yml.j2 dest=/tmp/registry-pv.yml
-  register: registry_pv
-
-- command: kubectl apply -f /tmp/registry-pv.yml
-  name: apply registry-pv
-  when: registry_pv.changed
-
 - template: src=registry-pvc.yml.j2 dest=/tmp/registry-pvc.yml
   register: registry_pvc
 

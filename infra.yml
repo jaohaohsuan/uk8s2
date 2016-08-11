@@ -1,6 +1,5 @@
 ---
 - hosts: localhost
-  become: yes
   vars_prompt:
     - name: kubernetes_version
       prompt: kubernetes version
@@ -12,25 +11,31 @@
     - name: kube_api_server
       prompt: target kubernetes api server
       private: no
-      default: "https://192.168.1.110:443"
-    # - name: pv_host
-    #   prompt: persistent volume host
-    #   private: no
+      default: "https://192.168.80.141:443"
+    - name: storage_host
+      prompt: storage host
+      private: no
   vars:
-    glusterfs_pvs:
-      - name: gv0
-        vol: gv0
-        cap: 3Gi
-      - name: gv1
-        vol: gv1
-        cap: 3Gi
-      - name: gv2
-        vol: gv2
-        cap: 3Gi
+    pv:
+      - name: cassandra0
+        size: 10Gi
+        path: /data/pv/cassandra0
+      - name: cassandra1
+        size: 10Gi
+        path: /data/pv/cassandra1
+      - name: cassandra2
+        size: 10Gi
+        path: /data/pv/cassandra2
+      - name: registry
+        size: 100Gi
+        path: /data/pv/registry
   tasks:
     - file: >
-        path="{{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}"
+        path="/etc/kubernetes/ssl/{{ pki_dir }}"
         state=directory
+        owner="{{ ansible_user }}"
+        mode=0750
+      become: yes
 
     - local_action: stat
       args:
@@ -51,45 +56,51 @@
 
     - copy: >
         src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
-        dest="{{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/ca.crt"
-        mode=0644
+        dest="/etc/kubernetes/ssl/{{ pki_dir }}/ca.crt"
+        owner="{{ ansible_user }}"
+        mode=0750
       name: copy ca.crt
+      become: yes
 
     - copy: >
         src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/node-{{ ansible_hostname }}.crt"
-        dest="{{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/kubecfg.crt"
-        mode=0740
+        dest="/etc/kubernetes/ssl/{{ pki_dir }}/kubecfg.crt"
+        mode=0750
         owner="{{ ansible_user }}"
       name: "copy kubecfg.crt"
+      become: yes
 
     - copy: >
         src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
-        dest="{{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/kubecfg.key"
-        mode=0740
+        dest="/etc/kubernetes/ssl/{{ pki_dir }}/kubecfg.key"
+        mode=0750
         owner="{{ ansible_user }}"
       name: copy kubecfg.key
+      become: yes
 
     - file: >
         src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/kubernetes/platforms/linux/amd64/kubectl"
         path=/usr/local/bin/kubectl
         state=link
+        mode=0750
+      become: yes
 
     - command: >
         kubectl config set-credentials 
-        {{ ansible_hostname }}-{{ ansible_user }} 
-        --client-key={{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/kubecfg.key 
-        --client-certificate={{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/kubecfg.crt
+        {{ pki_dir }}-admin 
+        --client-key=/etc/kubernetes/ssl/{{ pki_dir }}/kubecfg.key 
+        --client-certificate=/etc/kubernetes/ssl/{{ pki_dir }}/kubecfg.crt
       name: kubectl config set-credentials
 
     - command: >
         kubectl config set-cluster {{ pki_dir }}-cluster
-        --certificate-authority={{ ansible_user_dir }}/kubernetes/ssl/{{ pki_dir }}/ca.crt 
+        --certificate-authority=/etc/kubernetes/ssl/{{ pki_dir }}/ca.crt 
         --server={{ kube_api_server }}
       name: kubectl config set-cluster
 
     - command: >
         kubectl config set-context {{ pki_dir }}-context 
-        --user={{ ansible_hostname }}-{{ ansible_user }} 
+        --user={{ pki_dir }}-admin 
         --cluster={{ pki_dir }}-cluster
       name: kubectl config set-context
 
@@ -97,23 +108,46 @@
         kubectl config use-context {{ pki_dir }}-context
       name: Sets the current-context in a kubeconfig file
 
+    - file: path={{ item.path }} state=directory
+      with_items: "{{ pv }}"
+      delegate_to: "{{ storage_host }}"
+      name: mkdir hostPath
+
+    - template: >
+        src=hostPath-pv.yml.j2
+        dest="/tmp/hostPath-pv-{{ item.name }}.yml"
+      with_items: "{{ pv }}"
+
+    - command: >
+        kubectl apply -f /tmp/hostPath-pv-{{ item.name }}.yml
+      with_items: "{{ pv }}"
+      name: kubectl apply pv
+
+
 - hosts: nodes
   become: yes
   tasks:
     - copy: src=kube-registry-proxy.yml dest=/etc/kubernetes/manifests/kube-registry-proxy.yml
       name: copy registry proxy to manifests
-      register: register_proxy
 
 - hosts: localhost
   vars_files:
     - vars_files/kube.yml
   vars:
-    registry_pv_storage: 100Gi
     registry_pvc_storage: 100Gi
   roles:
     - { role: kube-addons }
+  tasks:
+    # - copy: src=cassandra-petset.yml dest=/tmp/cassandra-petset.yml
+    #   register: cassandra_petset
 
-  
+    # - command: kubectl apply -f /tmp/cassandra-petset.yml
+    #   when: cassandra_petset.changed
+
+
+
+
+
     # - name: gather facts from glusters
     #   setup:
     #   delegate_to: "{{ item }}"
@@ -154,8 +188,5 @@
     #     - cassandra
 
 
-    # - command: kubectl apply -f /tmp/cassandra-petset.yml
-    #   become: yes
-    #   tags:
-    #     - cassandra
+
 

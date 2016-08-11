@@ -19,6 +19,8 @@ spec:
         version: v0
         kubernetes.io/cluster-service: "true"
     spec:
+      nodeSelector:
+        env: production
       containers:
       - name: registry
         image: registry:2

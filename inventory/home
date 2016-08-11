@@ -9,7 +9,6 @@ master2
 
 [nodes]
 master2
-localhost
 
 [nodes:vars]
 flannel_etcd_group_name=etcd

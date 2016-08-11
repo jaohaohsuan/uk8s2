@@ -1,0 +1,46 @@
+---
+- hosts: localhost
+  vars:
+    downloads_dir: "{{ playbook_dir }}/downloads"
+  vars_prompt:
+    - name: kubernetes_version
+      prompt: kubernetes version
+      default: "v1.3.4"
+      private: no
+  tasks:
+    - name: Build kube-registry-proxy image
+      docker_image:
+        path: "{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/kubernetes/cluster/addons/registry/images"
+        push: no
+        name: 127.0.0.1:5000/google_containers/kube-registry-proxy
+        tag: 0.3
+        archive_path: "/tmp/kube-registry-proxy.tar"
+
+    - name: Build an image
+      docker_image:
+        path: images/cassandra/3.7
+        push: no
+        name: 127.0.0.1:5000/infra/cassandra
+        tag: 3.7
+        archive_path: "/tmp/cassandra37.tar"
+
+- hosts: nodes
+  become: yes
+  tasks:
+    - apt: name=python-docker
+    
+    - copy: src=/tmp/kube-registry-proxy.tar dest=/tmp/kube-registry-proxy.tar
+    - name: Load image from kube-registry-proxy.tar archive
+      docker_image:
+        name: 127.0.0.1:5000/google_containers/kube-registry-proxy
+        tag: 0.3
+        load_path: /tmp/kube-registry-proxy.tar
+        push: no
+
+    - copy: src=/tmp/cassandra37.tar dest=/tmp/cassandra37.tar
+    - name: Load image from cassandra37.tar archive
+      docker_image:
+        name: 127.0.0.1:5000/infra/cassandra
+        tag: 3.7
+        load_path: /tmp/kube-registry-proxy.tar
+        push: no
