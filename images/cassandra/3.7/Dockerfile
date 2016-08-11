@@ -14,8 +14,11 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update \
- && apt-get install vim -y \
+ && apt-get install curl -y \
+ && curl -Ls https://github.com/Yelp/dumb-init/releases/download/v1.1.3/dumb-init_1.1.3_amd64 > /usr/local/bin/dumb-init \
+ && chmod +x /usr/local/bin/dumb-init
  && rm -rf /var/lib/apt/lists/*
+
 
 COPY run.sh /
 
@@ -23,4 +26,5 @@ RUN chmod +x /run.sh
 
 ENV CASSANDRA_CONFIG /etc/cassandra
 
-ENTRYPOINT ["/run.sh"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/run.sh"]
