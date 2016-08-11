@@ -37,7 +37,9 @@ Vagrant.configure("2") do |config|
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
-  config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: [ "Vagrantfile", ".vagrant/" ]
+  config.vm.synced_folder ".", "/home/vagrant/workspace", type: "rsync", 
+    rsync__exclude: [ "Vagrantfile", ".vagrant/" ],
+    rsync__args: ["--verbose", "--rsync-path='sudo rsync'" ] 
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -71,5 +73,7 @@ Vagrant.configure("2") do |config|
     sudo apt-get update
     sudo apt-get install -y python-jinja2 python-yaml python-paramiko python-httplib2 python-six python-crypto python-setuptools sshpass python-pkg-resources
     sudo pip install git+git://github.com/ansible/ansible.git@devel
+    curl -Ls https://get.docker.com | sh
+    sudo pip install docker-py
   SHELL
 end
