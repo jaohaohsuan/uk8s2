@@ -16,7 +16,7 @@ RUN apt-get update \
 RUN apt-get update \
  && apt-get install curl -y \
  && curl -Ls https://github.com/Yelp/dumb-init/releases/download/v1.1.3/dumb-init_1.1.3_amd64 > /usr/local/bin/dumb-init \
- && chmod +x /usr/local/bin/dumb-init
+ && chmod +x /usr/local/bin/dumb-init \
  && rm -rf /var/lib/apt/lists/*
 
 
@@ -26,5 +26,5 @@ RUN chmod +x /run.sh
 
 ENV CASSANDRA_CONFIG /etc/cassandra
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["/run.sh"]
