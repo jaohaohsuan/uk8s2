@@ -112,16 +112,22 @@
       with_items: "{{ pv }}"
       delegate_to: "{{ storage_host }}"
       name: mkdir hostPath
+      tags:
+        - storage
 
     - template: >
         src=hostPath-pv.yml.j2
         dest="/tmp/hostPath-pv-{{ item.name }}.yml"
       with_items: "{{ pv }}"
+      tags:
+        - storage
 
     - command: >
         kubectl apply -f /tmp/hostPath-pv-{{ item.name }}.yml
       with_items: "{{ pv }}"
       name: kubectl apply pv
+      tags:
+        - storage
 
 
 - hosts: nodes
@@ -138,11 +144,11 @@
   roles:
     - { role: kube-addons }
   tasks:
-    # - copy: src=cassandra-petset.yml dest=/tmp/cassandra-petset.yml
-    #   register: cassandra_petset
+    - copy: src=cassandra-petset.yml dest=/tmp/cassandra-petset.yml
+      register: cassandra_petset
 
-    # - command: kubectl apply -f /tmp/cassandra-petset.yml
-    #   when: cassandra_petset.changed
+    - command: kubectl apply -f /tmp/cassandra-petset.yml
+      when: cassandra_petset.changed
 
 
 

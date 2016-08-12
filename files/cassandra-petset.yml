@@ -16,7 +16,7 @@ spec:
 apiVersion: "apps/v1alpha1"
 kind: PetSet
 metadata:
-  name: data
+  name: cassandra-data
 spec:
   serviceName: cassandra
   # replicas are the same as used by Replication Controllers
@@ -33,8 +33,10 @@ spec:
       # or more containers are deployed
       containers:
       - name: cassandra
-        image: "127.0.0.1:5000/infra/cassandra:3.7"
+        image: "127.0.0.1:5000/infra/cassandra:3.7-alpine"
         imagePullPolicy: IfNotPresent
+        #command: [ "/usr/local/bin/dumb-init", "--" ]
+        args: [ "/run.sh", "/opt/cassandra/bin/cassandra", "-f", "-R" ]
         #command: [ "sh", "-c", "echo 'running since '`date +'%r'`; while true; do sleep 600; done"]
         ports:
         - containerPort: 7000
@@ -58,7 +60,7 @@ spec:
           # this is relying on guaranteed network identity of Pet Sets, we
           # will know the name of the Pets / Pod before they are created
           - name: CASSANDRA_SEEDS
-            value: "cassandra-0.cassandra.default.svc.cluster.local"
+            value: "cassandra-data-0.cassandra.default.svc.cluster.local"
           - name: CASSANDRA_CLUSTER_NAME
             value: "homemade"
           - name: CASSANDRA_DC
@@ -83,14 +85,14 @@ spec:
         #     - /ready-probe.sh
         #   initialDelaySeconds: 15
         #   timeoutSeconds: 5
-  #       volumeMounts:
-  #         - name: cassandra-data
-  #           mountPath: /opt/cassandra/data/data
-  volumeClaimTemplates:
-  - metadata:
-     name: cassandra-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 2
+        # volumeMounts:
+        #   - name: data
+        #     mountPath: /opt/cassandra/data/data
+  # volumeClaimTemplates:
+  # - metadata:
+  #    name: data
+  #   spec:
+  #     accessModes: [ "ReadWriteOnce" ]
+  #     resources:
+  #       requests:
+  #         storage: 2
