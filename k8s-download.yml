@@ -1,0 +1,44 @@
+---
+- name: prepare k8s needs
+  gather_facts: true
+  hosts: localhost
+  connection: local
+  vars_prompt:
+    - name: kubernetes_version
+      prompt: kubernetes version
+      default: "v1.3.6"
+      private: no
+  vars:
+    downloads_dir: "{{ playbook_dir }}/downloads"
+  tasks:
+    - name: "mkdir -p {{ item }}"
+      file: >
+        path={{ downloads_dir }}/{{ item }}
+        state=directory
+      with_items:
+        - "kubernetes-{{ kubernetes_version }}"
+        - "kubernetes-{{ kubernetes_version }}/bin"
+    - get_url: >
+        url=https://storage.googleapis.com/kubernetes-release/release/{{ kubernetes_version }}/bin/linux/amd64/hyperkube
+        dest={{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/hyperkube
+        mode=u+x,g+x
+
+    # - name: install kubectl
+    #   file: >
+    #     src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/kubectl"
+    #     dest=/usr/local/bin/kubectl
+    #     state=link
+    #     mode=0754
+    #     owner="{{ ansible_user }}"
+    #   become: yes
+    #   tags:
+    #     - "man"
+
+    # - name: enable kubectl completion
+    #   blockinfile:
+    #     dest: ~/.bashrc
+    #     block: |
+    #       # kubectl completion
+    #       source <(kubectl completion bash)
+    #   tags:
+    #     - "man"
