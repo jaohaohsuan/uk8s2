@@ -1,0 +1,13 @@
+---
+- file: path=/var/lib/kubelet group=root state=directory
+
+- template: >
+    src=kubeconfig.j2
+    dest=/var/lib/kubelet/kubeconfig
+    mode=0600
+
+- copy: src=kubelet.service dest=/lib/systemd/system/kubelet.service
+
+- template: src=kubelet.j2 dest=/etc/default/kubelet
+
+- file: path=/etc/kubernetes/manifests state=directory

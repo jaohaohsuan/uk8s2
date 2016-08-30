@@ -1,104 +1,25 @@
 ---
-
-- debug: msg="{{ lookup('env','HOME') }}"
-
-- file: path="{{ item }}" state=directory
-  with_items:
-    - /etc/kubernetes/manifests
-    - /etc/kubernetes/ssl
-
-- file: path="{{ item }}" owner="{{ ansible_user }}" mode=0751 state=directory
-  with_items:
-    - "/var/lib/kubelet"
-
-- file: path="{{ item }}" state=directory mode=0751 owner="{{ ansible_user }}"
-  with_items:
-    - "{{ lookup('env','HOME') }}/.kube"
-  name: set user home directory permision
-
-- template: >
-    src=kubeconfig.j2
-    dest=/var/lib/kubelet/kubeconfig
-    mode=0640
-    owner="{{ ansible_user }}"
-  notify:
-    - restart kube-proxy
-    - restart kubelet
-
-- file: >
-    src=/var/lib/kubelet/kubeconfig
-    dest="{{ lookup('env','HOME') }}/.kube/config"
-    state=link
-    owner="{{ ansible_user }}"
-
 - copy: >
-    src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/hyperkube"
+    src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/hyperkube"
     dest="/usr/local/bin/hyperkube"
-    mode=0744
-  notify:
-    - restart kube-proxy
-    - restart kubelet
+    mode=0750
   tags:
     - "upgrade:{{ kubernetes_version }}"
+  name: copy hyperkube
 
-- copy: src="{{ item }}.service" dest="/lib/systemd/system/{{ item }}.service"
-  with_items:
-    - kubelet
-    - kube-proxy
-  notify:
-    - restart kube-proxy
-    - restart kubelet
+- include: "kubelet.yml"
 
-- template: src="{{ item }}.j2" dest="/etc/default/{{ item }}"
-  with_items:
-    - kubelet
-    - kube-proxy
-  notify:
-    - restart kube-proxy
-    - restart kubelet
+- include: "kube-proxy.yml"
 
-- local_action: stat
-  args:
-    path: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
-  register: ca
-  run_once: true
-  name: get ca.crt stat
+- include: "gen_tls_keypairs.yml"
 
-- local_action: "shell ./easyrsa build-client-full node-{{ ansible_hostname }} nopass"
-  args:
-    chdir: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
-    creates: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
-  environment:
-    EASYRSA_PKI: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}"
-    EASYRSA: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
-  when: ca.stat.exists
-  name: generate client certificate authentication
+# - file: path="{{ item }}" state=directory mode=0751 owner="{{ ansible_user }}"
+#   with_items:
+#     - "{{ lookup('env','HOME') }}/.kube"
+#   name: set user home directory permision
 
-- copy: >
-    src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
-    dest=/etc/kubernetes/ssl/ca.crt
-    mode=0644
-  name: copy ca.crt
-
-- copy: >
-    src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/node-{{ ansible_hostname }}.crt"
-    dest=/etc/kubernetes/ssl/kubecfg.crt
-    mode=0740
-    owner="{{ ansible_user }}"
-  name: "copy kubecfg.crt"
-
-- copy: >
-    src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/node-{{ ansible_hostname }}.key"
-    dest=/etc/kubernetes/ssl/kubecfg.key
-    mode=0740
-    owner="{{ ansible_user }}"
-  name: copy kubecfg.key
-
-- command: systemctl daemon-reload
-  changed_when: false
-
-- systemd: state=started name="{{ item }}" enabled=yes
-  with_items:
-    - kubelet
-    - kube-proxy
-  name: start kube services
+# - file: >
+#     src=/var/lib/kubelet/kubeconfig
+#     dest="{{ lookup('env','HOME') }}/.kube/config"
+#     state=link
+#     owner="{{ ansible_user }}"

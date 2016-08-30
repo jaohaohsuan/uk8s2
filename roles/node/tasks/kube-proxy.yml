@@ -1,0 +1,5 @@
+---
+
+- copy: src=kube-proxy.service dest=/lib/systemd/system/kube-proxy.service
+
+- template: src=kube-proxy.j2 dest=/etc/default/kube-proxy

@@ -1,0 +1,37 @@
+---
+
+- file: path=/etc/kubernetes/ssl state=directory
+
+- local_action: stat
+  args:
+    path: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
+  register: ca
+  name: get ca.crt stat
+
+- local_action: "shell ./easyrsa build-client-full {{ ansible_hostname }}-worker nopass"
+  args:
+    chdir: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+    creates: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/{{ ansible_hostname }}-worker.key"
+  environment:
+    EASYRSA_PKI: "{{ downloads_dir }}/easy-rsa/{{ pki_dir }}"
+    EASYRSA: "{{ downloads_dir }}/easy-rsa/easy-rsa-master/easyrsa3"
+  when: ca.stat.exists
+  name: generate worker TLS keypairs
+
+- copy: >
+    src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/ca.crt"
+    dest=/etc/kubernetes/ssl/ca.crt
+    mode=0640
+  name: copy ca.crt
+
+- copy: >
+    src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/issued/{{ ansible_hostname }}-worker.crt"
+    dest=/etc/kubernetes/ssl/worker.crt
+    mode=0600
+  name: copy worker.crt
+
+- copy: >
+    src="{{ downloads_dir }}/easy-rsa/{{ pki_dir }}/private/{{ ansible_hostname }}-worker.key"
+    dest=/etc/kubernetes/ssl/worker.key
+    mode=0600
+  name: copy worker.key
