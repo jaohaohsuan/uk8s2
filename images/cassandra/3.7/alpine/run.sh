@@ -37,6 +37,13 @@ for rackdc in dc rack; do
   fi
 done
 
+export PATH=$PATH:/opt/cassandra/bin
+
+chmod g+w /opt/cassandra/data
+chmod g+w /opt/cassandra/logs
+
+ulimit -l unlimited
+
 set +ex
 
-exec "$@"
+sudo -E -u cassandra "$@"

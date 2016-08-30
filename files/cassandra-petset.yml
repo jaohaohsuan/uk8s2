@@ -33,7 +33,7 @@ spec:
       # or more containers are deployed
       containers:
       - name: cassandra
-        image: "127.0.0.1:5000/infra/cassandra:3.7-alpine"
+        image: "127.0.0.1:5000/inu/cassandra:3.7-alpine"
         imagePullPolicy: IfNotPresent
         #command: [ "/usr/local/bin/dumb-init", "--" ]
         args: [ "/run.sh", "/opt/cassandra/bin/cassandra", "-f", "-R" ]
@@ -85,14 +85,14 @@ spec:
         #     - /ready-probe.sh
         #   initialDelaySeconds: 15
         #   timeoutSeconds: 5
-        # volumeMounts:
-        #   - name: data
-        #     mountPath: /opt/cassandra/data/data
-  # volumeClaimTemplates:
-  # - metadata:
-  #    name: data
-  #   spec:
-  #     accessModes: [ "ReadWriteOnce" ]
-  #     resources:
-  #       requests:
-  #         storage: 2
+        volumeMounts:
+          - name: data
+            mountPath: /opt/cassandra/data
+  volumeClaimTemplates:
+  - metadata:
+     name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2
