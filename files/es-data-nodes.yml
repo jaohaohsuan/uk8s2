@@ -1,0 +1,62 @@
+---
+apiVersion: "apps/v1alpha1"
+kind: PetSet
+metadata:
+  name: es-data
+spec:
+  serviceName: "elasticsearch"
+  # replicas are the same as used by Replication Controllers
+  # except pets are deployed in order 0, 1, 2, 3, etc
+  replicas: 2
+  template:
+    metadata:
+      annotations:
+        pod.alpha.kubernetes.io/initialized: "true"
+      labels:
+        elasticsearch: data
+    spec:
+      # just as other component in Kubernetes one
+      # or more containers are deployed
+      containers:
+      - name: data
+        image: "127.0.0.1:5000/inu/elasticsearch:latest"
+        imagePullPolicy: IfNotPresent
+        #command: [ "/usr/local/bin/dumb-init", "--" ]
+        args: [ "/usr/local/bin/run.sh", "/opt/elasticsearch/bin/elasticsearch" ]
+        #command: [ "sh", "-c", "echo 'running since '`date +'%r'`; while true; do sleep 600; done"]
+        ports:
+        - containerPort: 9300
+          name: transport
+        resources:
+          limits:
+            cpu: "1"
+            memory: "8Gi"
+          requests:
+           cpu: "1"
+           memory: "8Gi"
+        securityContext:
+          privileged: true
+        env:
+          - name: CLUSTER_NAME
+            value: inu
+          - name: ES_HEAP_SIZE
+            value: "4096m"
+          - name: NODE_MASTER
+            value: "false"
+          - name: NODE_DATA
+            value: "true"
+          - name: HTTP_ENABLE
+            value: "false"
+          - name: ZEN_HOSTS
+            value: es-master-0.elasticsearch-discovery.default.svc.cluster.local
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+     name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 64Gi

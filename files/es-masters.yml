@@ -1,0 +1,76 @@
+---
+# Headless service to provide DNS lookup
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: elasticsearch-discovery
+  name: elasticsearch-discovery
+spec:
+  clusterIP: None
+  ports:
+    - port: 9300
+  selector:
+    elasticsearch: master
+---
+apiVersion: "apps/v1alpha1"
+kind: PetSet
+metadata:
+  name: es-master
+spec:
+  serviceName: "elasticsearch-discovery"
+  # replicas are the same as used by Replication Controllers
+  # except pets are deployed in order 0, 1, 2, 3, etc
+  replicas: 2
+  template:
+    metadata:
+      annotations:
+        pod.alpha.kubernetes.io/initialized: "true"
+      labels:
+        elasticsearch: master
+    spec:
+      # just as other component in Kubernetes one
+      # or more containers are deployed
+      containers:
+      - name: master
+        image: "127.0.0.1:5000/inu/elasticsearch:latest"
+        imagePullPolicy: IfNotPresent
+        #command: [ "/usr/local/bin/dumb-init", "--" ]
+        args: [ "/usr/local/bin/run.sh", "/opt/elasticsearch/bin/elasticsearch" ]
+        #command: [ "sh", "-c", "echo 'running since '`date +'%r'`; while true; do sleep 600; done"]
+        ports:
+        - containerPort: 9300
+          name: transport
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+           cpu: "1"
+           memory: "1Gi"
+        securityContext:
+          privileged: true
+        env:
+          - name: CLUSTER_NAME
+            value: inu
+          - name: ES_HEAP_SIZE
+            value: "1024m"
+          - name: NODE_MASTER
+            value: true
+          - name: NODE_DATA
+            value: false
+          - name: HTTP_ENABLE
+            value: false
+          - name: ZEN_HOSTS
+            value: es-master-0.elasticsearch-discovery.default.svc.cluster.local
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+     name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
