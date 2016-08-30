@@ -12,9 +12,10 @@
     dest=/etc/default/etcd
     backup=yes
   become: yes
-  notify:
-    - reload systemd
-    - restart etcd
+  register: etcd_args
+
+- systemd: state=restarted name=etcd daemon_reload=yes
+  when: etcd_args.changed
 
 - name: config flannel
   include: "config-flannel.yml"
