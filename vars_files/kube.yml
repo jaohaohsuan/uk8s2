@@ -1,7 +1,9 @@
 kube:
   service-cluster-ip-range: "10.254.0.0/16"
+  service-ip: "10.254.0.1"
   cluster-dns: "10.254.0.10"
   cluster-domain: "cluster.local"
+
 
 flannel_network: "172.16.0.0/16"
 flannel_backends: "vxlan"
