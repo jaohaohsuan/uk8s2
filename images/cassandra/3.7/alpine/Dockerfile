@@ -18,7 +18,7 @@ COPY run.sh /
 
 RUN chmod g+x /run.sh && \
     adduser -h /home/cassandra -s /bin/sh -D -G root cassandra && \
-    chown -R alpine /opt/cassandra
+    chown -R cassandra /opt/cassandra
 
 ENV CASSANDRA_CONFIG /opt/cassandra/conf
 
