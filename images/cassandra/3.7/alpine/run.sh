@@ -39,10 +39,13 @@ done
 
 export PATH=$PATH:/opt/cassandra/bin
 
+
 chmod g+w /opt/cassandra/data
 chmod g+w /opt/cassandra/logs
 
-ulimit -l unlimited
+#ulimit -l unlimited
+
+swapoff -a
 
 set +ex
 

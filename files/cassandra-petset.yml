@@ -37,26 +37,26 @@ spec:
         imagePullPolicy: IfNotPresent
         #command: [ "/usr/local/bin/dumb-init", "--" ]
         args: [ "/run.sh", "/opt/cassandra/bin/cassandra", "-f", "-R" ]
-        #command: [ "sh", "-c", "echo 'running since '`date +'%r'`; while true; do sleep 600; done"]
+        #args: [ "sh", "-c", "echo 'running since '`date +'%r'`; while true; do sleep 600; done"]
         ports:
         - containerPort: 7000
           name: intra-node
         - containerPort: 9042
           name: cql
-        # resources:
-        #   limits:
-        #     cpu: "2"
-        #     memory: "4Gi"
-        #   requests:
-        #    cpu: "2"
-        #    memory: "2Gi"
+        resources:
+          limits:
+            cpu: "2"
+            memory: "5Gi"
+          requests:
+           cpu: "2"
+           memory: "5Gi"
         securityContext:
           privileged: true
         env:
-          # - name: MAX_HEAP_SIZE
-          #   value: 4096M
-          # - name: HEAP_NEWSIZE
-          #   value: 2048M
+          - name: MAX_HEAP_SIZE
+            value: 4096M
+          - name: HEAP_NEWSIZE
+            value: 800M
           # this is relying on guaranteed network identity of Pet Sets, we
           # will know the name of the Pets / Pod before they are created
           - name: CASSANDRA_SEEDS
@@ -95,4 +95,4 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 2
+          storage: 100Gi
