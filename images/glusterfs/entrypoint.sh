@@ -1,13 +1,11 @@
 #!/bin/bash
 
-
 if [ -e /build/utils.sh ]; then
   . /build/utils.sh
 fi
 
 function check_running_gluster {
-
-  netstat -tan | grep 24007 &> /dev/null
+  netstat -tan | grep 24007 | grep -v TIME_WAIT &> /dev/null
   return $?
 }
 
