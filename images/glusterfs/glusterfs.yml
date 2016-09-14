@@ -1,0 +1,52 @@
+---
+kind: DaemonSet
+apiVersion: extensions/v1beta1
+metadata:
+  name: glusterfs-daemonset
+spec:
+  template:
+    metadata:
+      name: glusterfs
+      labels:
+        app: glusterfs
+    spec:
+      hostNetwork: true
+#     nodeSelector:
+      containers:
+      - name: glusterfs
+        image: 127.0.0.1:5000/inu/glusterfs:3.8
+        imagePullPolicy: IfNotPresent
+        #command: [ "sh", "-c", "echo 'running since '`date +'%r'`; while true; do sleep 600; done"]
+        args: ["/build/entrypoint.sh"]
+        env:
+          - name: K8S_URL
+            value: https://192.168.2.110:443
+        volumeMounts:
+        - name: devtree
+          mountPath: "/dev"
+        - name: runlvm
+          mountPath: "/run/lvm"
+        - name: glusterfs-etc
+          mountPath: "/etc/glusterfs"
+        - name: glusterfs-logs
+          mountPath: "/var/log/glusterfs"
+        - name: glusterfs-config
+          mountPath: "/var/lib/glusterd"
+        securityContext:
+          privileged: true
+      volumes:
+      - name: devtree
+        hostPath:
+          path: "/dev"
+      - name: runlvm
+        hostPath:
+          path: "/run/lvm"
+      - name: glusterfs-etc
+        hostPath:
+          path: "/etc/glusterfs"
+      - name: glusterfs-logs
+        hostPath:
+          path: "/var/log/glusterfs"
+      - name: glusterfs-config
+        hostPath:
+          path: "/var/lib/glusterd"
