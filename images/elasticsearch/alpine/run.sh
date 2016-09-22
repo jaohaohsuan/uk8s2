@@ -3,9 +3,6 @@
 # allow for memlock
 # ulimit -l unlimited
 
-chmod g+w /data
-
-
 # set environment
 export PATH=$PATH:/opt/elasticsearch/bin:/usr/local/bin
 export CLUSTER_NAME=${CLUSTER_NAME:-elasticsearch-default}
@@ -22,4 +19,4 @@ export NUMBER_OF_REPLICAS=${NUMBER_OF_REPLICAS:-1}
 
 #ulimit -l unlimited
 
-sudo -E -u alpine "$@"
+exec "$@"
