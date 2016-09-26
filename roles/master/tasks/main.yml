@@ -1,6 +1,6 @@
 ---
 - copy: >
-    src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/kubernetes/server/bin/hyperkube"
+    src="{{ downloads_dir }}/kubernetes-{{ kubernetes_version }}/bin/hyperkube"
     dest="/usr/local/bin/hyperkube"
     mode=0744
   tags:
