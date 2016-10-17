@@ -36,3 +36,4 @@ RUN /usr/local/bin/install-plugins.sh \
     kubernetes-ci \
     ansicolor:0.4.2
 ```
+设置环境变数`TRY_UPGRADE_IF_NO_MARKER=true`image可覆盖之前container内的plugin版本.
