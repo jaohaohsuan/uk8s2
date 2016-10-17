@@ -1,5 +1,22 @@
 #Jenkins
-在kubernetes中运行jenkins
+在kubernetes中运行jenkins, 必须将jenkins master视为一个service，以便jenkins client可寻址，切勿用pod IP或host IP.
+配置如下:
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins
+spec:
+  type: NodePort
+  selector:
+    app: jenkins-master
+  ports:
+    - name: http
+      port: 8080
+    - name: jnlp
+      port: 50000
+```
+NodePort Service会分配一组kubernetes内部的虚拟服务IP, 并随机分配30000~32767端口供外部访问(NodeIP:NodePort)
 
 ##Build image
 ```
