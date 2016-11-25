@@ -1,4 +1,4 @@
-FROM jenkins:2.19.1-alpine
+FROM jenkins:2.19.2-alpine
 RUN /usr/local/bin/install-plugins.sh \
     kubernetes-ci \
     ansicolor:0.4.2
