@@ -58,5 +58,12 @@ WORKDIR /home/jenkins
 COPY jenkins-slave /usr/local/bin/jenkins-slave
 
 RUN mkdir -p sbt-init \
+  && cd sbt-init \
   && sbt -v -211 -sbt-create about \
-  && rm -rf sbt-init
+  && cd .. \
+  && rm -rf sbt-init \
+  && tar -zcvf /tmp/sbt-caches.tar.gz .sbt .ivy2 \
+  && rm -rf .sbt .ivy2
+
+COPY entrypoint.sh /usr/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
